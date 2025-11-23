@@ -4,19 +4,20 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
+<VBox alignment="CENTER" spacing="0" stylesheets="@styles.css" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.baharkiraathanesi.kiraathane.LoginController">
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
-    </padding>
 
-    <Label text="Bahar Kıraathanesi">
-        <font><Font size="24.0" /></font>
-    </Label>
+    <VBox spacing="20" alignment="CENTER" styleClass="login-box" maxWidth="350">
+        <Label text="Kıraathane Otomasyonu" styleClass="header-label"/>
 
-    <TextField fx:id="usernameField" promptText="Kullanıcı Adı" maxWidth="200"/>
-    <PasswordField fx:id="passwordField" promptText="Şifre" maxWidth="200"/>
+        <Label text="Kullanıcı Girişi" style="-fx-text-fill: #666;"/>
 
-    <Button text="GİRİŞ YAP" onAction="#onLoginButtonClick" style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
-    <Label fx:id="errorLabel" text="" textFill="RED"/>
+        <TextField fx:id="usernameField" promptText="Kullanıcı Adı" style="-fx-font-size: 14px;"/>
+        <PasswordField fx:id="passwordField" promptText="Şifre" style="-fx-font-size: 14px;"/>
+
+        <Button text="GİRİŞ YAP" onAction="#onLoginButtonClick" maxWidth="Infinity" style="-fx-padding: 10 20;"/>
+
+        <Label fx:id="errorLabel" text="" textFill="RED"/>
+    </VBox>
+
 </VBox>
