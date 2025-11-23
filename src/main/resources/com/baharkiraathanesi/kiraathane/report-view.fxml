@@ -12,6 +12,8 @@
             <Button text="← Ana Menü" onAction="#goBackToMenu" style="-fx-background-color: #555; -fx-text-fill: white;"/>
             <Label text="Gün Sonu Raporu (Z Raporu)" textFill="WHITE" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
             <Region HBox.hgrow="ALWAYS"/>
+            <Button text="📄 Z Raporu Al ve Yazdır" onAction="#printZReport"
+                    style="-fx-background-color: #FF5722; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20;"/>
             <Label fx:id="dateLabel" text="" textFill="#aaa" style="-fx-font-size: 14px;"/>
         </HBox>
     </top>
@@ -48,6 +50,9 @@
                     <Label fx:id="totalRevenueLabel" text="0.00 TL" style="-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #00796B;"/>
                 </VBox>
             </HBox>
+            <Label text="⚠️ Z Raporu aldığınızda bugünkü veriler sıfırlanacak ve PDF olarak kaydedilecektir!"
+                   style="-fx-text-fill: #d84315; -fx-font-size: 11px; -fx-padding: 10 0 0 0;"
+                   wrapText="true"/>
         </VBox>
     </bottom>
 

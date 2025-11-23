@@ -3,6 +3,7 @@ module com.baharkiraathanesi.kiraathane {
     requires javafx.fxml;
     requires java.sql;
     requires mysql.connector.j;
+    requires org.apache.pdfbox;
 
 
     opens com.baharkiraathanesi.kiraathane to javafx.fxml;
