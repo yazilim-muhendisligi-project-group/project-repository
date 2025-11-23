@@ -6,9 +6,23 @@
 
 /* Başlıklar */
 .header-label {
-    -fx-font-size: 24px;
+    -fx-font-size: 28px;
     -fx-font-weight: bold;
     -fx-text-fill: #333333;
+}
+
+/* Ana Menü Kartları */
+.menu-card {
+    -fx-padding: 20;
+    -fx-background-color: transparent;
+    -fx-background-radius: 15;
+    -fx-transition: all 0.3s ease;
+}
+
+.menu-card:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.3);
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
 }
 
 /* Standart Butonlar */

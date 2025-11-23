@@ -124,21 +124,25 @@ public class ReportController {
 
             PDPageContentStream contentStream = new PDPageContentStream(document, page);
 
+            // Fontları önceden tanımla (sistem fontlarını taramayı önler)
+            PDType1Font boldFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+            PDType1Font normalFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+
             // Başlık
-            contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 18);
+            contentStream.setFont(boldFont, 18);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, 750);
             contentStream.showText("BAHAR KIRAATHANESI");
             contentStream.endText();
 
-            contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 14);
+            contentStream.setFont(boldFont, 14);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, 730);
             contentStream.showText("GUN SONU RAPORU (Z RAPORU)");
             contentStream.endText();
 
             // Tarih ve saat
-            contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 10);
+            contentStream.setFont(normalFont, 10);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, 710);
             contentStream.showText("Tarih: " + now.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
@@ -151,14 +155,14 @@ public class ReportController {
 
             // Özet bilgiler
             float yPosition = 680;
-            contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 12);
+            contentStream.setFont(boldFont, 12);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
             contentStream.showText("OZET BILGILER");
             contentStream.endText();
 
             yPosition -= 25;
-            contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 11);
+            contentStream.setFont(normalFont, 11);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
             contentStream.showText("Toplam Islem Sayisi: " + (currentOrders == null ? 0 : currentOrders.size()));
@@ -178,14 +182,14 @@ public class ReportController {
 
             // Satış detayları
             yPosition -= 25;
-            contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 12);
+            contentStream.setFont(boldFont, 12);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
             contentStream.showText("SATIS DETAYLARI");
             contentStream.endText();
 
             yPosition -= 20;
-            contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 9);
+            contentStream.setFont(boldFont, 9);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
             contentStream.showText("ID");
@@ -208,7 +212,7 @@ public class ReportController {
             contentStream.endText();
 
             yPosition -= 15;
-            contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 9);
+            contentStream.setFont(normalFont, 9);
 
             if (currentOrders != null) {
                 for (Order order : currentOrders) {
@@ -219,6 +223,7 @@ public class ReportController {
                         document.addPage(page);
                         contentStream = new PDPageContentStream(document, page);
                         yPosition = 750;
+                        contentStream.setFont(normalFont, 9);
                     }
 
                     contentStream.beginText();
