@@ -67,27 +67,92 @@ public class StockController {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
 
+        // Ürün adı
         TextField nameField = new TextField();
-        nameField.setPromptText("Ürün Adı");
-        TextField categoryField = new TextField();
-        categoryField.setPromptText("Kategori (örn: İçecek)");
+        nameField.setPromptText("Örn: Türk Kahvesi");
+
+        // Ana kategori seçimi
+        ComboBox<String> mainCategoryCombo = new ComboBox<>();
+        mainCategoryCombo.getItems().addAll("İçecek", "Yiyecek", "Tatlı", "Diğer");
+        mainCategoryCombo.setPromptText("Ana Kategori Seçin");
+
+        // Alt kategori seçimi
+        ComboBox<String> subCategoryCombo = new ComboBox<>();
+        subCategoryCombo.setPromptText("Önce ana kategori seçin");
+        subCategoryCombo.setDisable(true);
+
+        // Ana kategori değişince alt kategorileri güncelle
+        mainCategoryCombo.setOnAction(e -> {
+            subCategoryCombo.getItems().clear();
+            String selected = mainCategoryCombo.getValue();
+
+            if ("İçecek".equals(selected)) {
+                subCategoryCombo.getItems().addAll("Sıcak İçecek", "Soğuk İçecek", "Alkollü İçecek", "Alkolsüz İçecek");
+            } else if ("Yiyecek".equals(selected)) {
+                subCategoryCombo.getItems().addAll("Ana Yemek", "Ara Sıcak", "Aperatif", "Salata");
+            } else if ("Tatlı".equals(selected)) {
+                subCategoryCombo.getItems().addAll("Sütlü Tatlı", "Şerbetli Tatlı", "Pasta", "Dondurma");
+            } else if ("Diğer".equals(selected)) {
+                subCategoryCombo.getItems().addAll("Sigara", "Nargile", "Diğer");
+            }
+
+            subCategoryCombo.setDisable(false);
+            subCategoryCombo.setPromptText("Alt Kategori Seçin");
+        });
+
+        // Detay kategori (opsiyonel)
+        ComboBox<String> detailCategoryCombo = new ComboBox<>();
+        detailCategoryCombo.setPromptText("Detay kategori (opsiyonel)");
+        detailCategoryCombo.setDisable(true);
+
+        // Alt kategori değişince detay kategorileri güncelle
+        subCategoryCombo.setOnAction(e -> {
+            detailCategoryCombo.getItems().clear();
+            String mainCat = mainCategoryCombo.getValue();
+            String subCat = subCategoryCombo.getValue();
+
+            if ("İçecek".equals(mainCat) && "Sıcak İçecek".equals(subCat)) {
+                detailCategoryCombo.getItems().addAll("Kahve", "Çay", "Bitki Çayı", "Sıcak Çikolata");
+                detailCategoryCombo.setDisable(false);
+            } else if ("İçecek".equals(mainCat) && "Soğuk İçecek".equals(subCat)) {
+                detailCategoryCombo.getItems().addAll("Meşrubat", "Meyve Suyu", "Smoothie", "Soğuk Kahve");
+                detailCategoryCombo.setDisable(false);
+            } else if ("Yiyecek".equals(mainCat) && "Ana Yemek".equals(subCat)) {
+                detailCategoryCombo.getItems().addAll("Et Yemekleri", "Tavuk Yemekleri", "Balık", "Vejeteryan");
+                detailCategoryCombo.setDisable(false);
+            } else {
+                detailCategoryCombo.setDisable(true);
+                detailCategoryCombo.setPromptText("Detay kategori yok");
+            }
+        });
+
+        // Fiyat
         TextField priceField = new TextField();
-        priceField.setPromptText("Fiyat");
+        priceField.setPromptText("Fiyat (TL)");
+
+        // Stok
         TextField stockField = new TextField();
         stockField.setPromptText("Başlangıç Stok Miktarı");
-        TextField unitField = new TextField();
-        unitField.setPromptText("Birim (örn: Adet, Porsiyon)");
+
+        // Birim seçimi
+        ComboBox<String> unitCombo = new ComboBox<>();
+        unitCombo.getItems().addAll("Adet", "Porsiyon", "Fincan", "Bardak", "Tabak", "Dilim", "Kg", "Gr");
+        unitCombo.setPromptText("Birim Seçin");
 
         grid.add(new Label("Ürün Adı:"), 0, 0);
         grid.add(nameField, 1, 0);
-        grid.add(new Label("Kategori:"), 0, 1);
-        grid.add(categoryField, 1, 1);
-        grid.add(new Label("Fiyat (TL):"), 0, 2);
-        grid.add(priceField, 1, 2);
-        grid.add(new Label("Stok Miktarı:"), 0, 3);
-        grid.add(stockField, 1, 3);
-        grid.add(new Label("Birim:"), 0, 4);
-        grid.add(unitField, 1, 4);
+        grid.add(new Label("Ana Kategori:"), 0, 1);
+        grid.add(mainCategoryCombo, 1, 1);
+        grid.add(new Label("Alt Kategori:"), 0, 2);
+        grid.add(subCategoryCombo, 1, 2);
+        grid.add(new Label("Detay Kategori:"), 0, 3);
+        grid.add(detailCategoryCombo, 1, 3);
+        grid.add(new Label("Fiyat (TL):"), 0, 4);
+        grid.add(priceField, 1, 4);
+        grid.add(new Label("Stok Miktarı:"), 0, 5);
+        grid.add(stockField, 1, 5);
+        grid.add(new Label("Birim:"), 0, 6);
+        grid.add(unitCombo, 1, 6);
 
         dialog.getDialogPane().setContent(grid);
         Platform.runLater(nameField::requestFocus);
@@ -96,23 +161,31 @@ public class StockController {
             if (dialogButton == addButtonType) {
                 try {
                     String name = nameField.getText().trim();
-                    String category = categoryField.getText().trim();
+                    String mainCat = mainCategoryCombo.getValue();
+                    String subCat = subCategoryCombo.getValue();
+                    String detailCat = detailCategoryCombo.getValue();
                     double price = Double.parseDouble(priceField.getText().trim());
                     int stock = Integer.parseInt(stockField.getText().trim());
-                    String unit = unitField.getText().trim();
+                    String unit = unitCombo.getValue();
 
-                    if (name.isEmpty() || category.isEmpty() || unit.isEmpty()) {
-                        throw new IllegalArgumentException("Tüm alanlar doldurulmalıdır!");
+                    if (name.isEmpty() || mainCat == null || subCat == null || unit == null) {
+                        throw new IllegalArgumentException("Zorunlu alanlar doldurulmalıdır!");
                     }
 
-                    boolean success = productDAO.addProduct(name, category, price, stock, unit);
+                    // Kategoriyi birleştir: "İçecek > Sıcak İçecek > Kahve"
+                    String fullCategory = mainCat + " > " + subCat;
+                    if (detailCat != null && !detailCat.isEmpty()) {
+                        fullCategory += " > " + detailCat;
+                    }
+
+                    boolean success = productDAO.addProduct(name, fullCategory, price, stock, unit);
                     if (success) {
-                        System.out.println("✅ Yeni ürün eklendi: " + name);
+                        System.out.println("✅ Yeni ürün eklendi: " + name + " (" + fullCategory + ")");
                         loadStockData();
 
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Başarılı");
-                        alert.setContentText("Ürün başarıyla eklendi!");
+                        alert.setContentText("Ürün başarıyla eklendi!\n" + name + "\n" + fullCategory);
                         alert.showAndWait();
                     }
                 } catch (NumberFormatException e) {
