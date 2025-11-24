@@ -6,6 +6,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -16,51 +18,104 @@ public class GirisEkrani extends StackPane {
         initView();
     }
 
-    private void initView(){
+    private void initView() {
+        // 1. ANA ARKA PLAN (Lacivert)
         this.setStyle("-fx-background-color: #1565C0;");
 
-        VBox loginCard = new VBox(20);
+        // 2. ANA KART (YATAY KUTU - HBOX)
+        // Artık VBox değil HBox kullanıyoruz.
+        HBox loginCard = new HBox();
+        loginCard.setMaxWidth(800); // Daha geniş bir kart
+        loginCard.setMaxHeight(450); // Yatay görünüm için yükseklik sınırı
         loginCard.setAlignment(Pos.CENTER);
-        loginCard.setMaxWidth(350);
-        loginCard.setPadding(new Insets(40));
 
+        // Kartın dış tasarımı (Beyaz, gölgeli, yuvarlak)
         loginCard.setStyle(
                 "-fx-background-color: white;" +
-                        "-fx-background-radius: 15;"+
-                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 0);"
+                        "-fx-background-radius: 15;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 15, 0, 0, 0);"
         );
 
-        Label lblTitle = new Label("BAHAR KIRAATHANESİ");
-        lblTitle.setTextFill(Color.web("#1565C0"));
-        lblTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22));
+        // =================================================================
+        // SOL TARAF (MARKALAMA VE İKON ALANI)
+        // =================================================================
+        VBox leftSide = new VBox(15); // Elemanlar arası 15px boşluk
+        leftSide.setAlignment(Pos.CENTER);
+        leftSide.setPadding(new Insets(40));
+        // Sol tarafın genişliğini sabitleyelim ki sağ taraf sıkışmasın
+        leftSide.setPrefWidth(350);
+        // Sol tarafa hafif gri bir ton verelim, sağdan ayrılsın
+        leftSide.setStyle("-fx-background-color: #F8F9FA; -fx-background-radius: 15 0 0 15;");
+
+        // --- İKON EKLEME ---
+        // ÖNEMLİ: Projenizin 'src/main/resources/images' klasörüne
+        // 'cay_bardagi.png' adında siyah bir ikon koymalısınız.
+        // Eğer resim yoksa, hata vermemesi için try-catch bloğu veya placeholder kullanın.
+        ImageView iconView = new ImageView();
+        try {
+            // Resmi resources klasöründen çekmeye çalışıyoruz
+            Image iconImage = new Image(getClass().getResourceAsStream("/images/cay_bardagi.png"));
+            iconView.setImage(iconImage);
+            iconView.setFitWidth(100); // İkon boyutu
+            iconView.setPreserveRatio(true);
+        } catch (Exception e) {
+            // Resim bulunamazsa geçici olarak bir text gösterelim
+            System.out.println("İkon bulunamadı: /images/cay_bardagi.png");
+            // Alternatif olarak buraya geçici bir Label ekleyebilirsiniz.
+        }
+
+        // Başlıklar
+        Label lblTitle = new Label("BAHAR\nKIRAATHANESİ");
+        lblTitle.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        lblTitle.setTextFill(Color.web("#263238")); // Koyu antrasit renk
+        lblTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
 
         Label lblSubtitle = new Label("Dijital Dönüşüm Paneli");
         lblSubtitle.setTextFill(Color.GRAY);
-        lblSubtitle.setFont(Font.font("Segoe UI", 12));
+        lblSubtitle.setFont(Font.font("Segoe UI", 14));
 
+        leftSide.getChildren().addAll(iconView, lblTitle, lblSubtitle);
+
+
+        // =================================================================
+        // SAĞ TARAF (FORM ALANI)
+        // =================================================================
+        VBox rightSide = new VBox(25); // Boşlukları artırdık
+        rightSide.setAlignment(Pos.CENTER);
+        rightSide.setPadding(new Insets(50));
+        HBox.setHgrow(rightSide, Priority.ALWAYS); // Kalan tüm genişliği kaplasın
+
+        Label lblGirisBaslik = new Label("Hoş Geldiniz");
+        lblGirisBaslik.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));
+        lblGirisBaslik.setTextFill(Color.web("#1565C0"));
+
+        // Form (GridPane)
         GridPane formGrid = new GridPane();
         formGrid.setAlignment(Pos.CENTER);
         formGrid.setHgap(10);
-        formGrid.setVgap(10);
+        formGrid.setVgap(15); // Dikey boşlukları artırdık
 
-        Label lblUser = new Label("Kullanıcı:");
+        // Input stilleri için ortak CSS
+        String inputStyle = "-fx-padding: 12px; -fx-background-radius: 5; -fx-border-color: #ddd; -fx-border-radius: 5; -fx-font-size: 14px;";
+
         TextField txtUser = new TextField();
-        txtUser.setPromptText("admin");
-        txtUser.setStyle("-fx-padding: 8px; -fx-background-radius: 5; -fx-border-color: #ddd; -fx-border-radius: 5;");
+        txtUser.setPromptText("Kullanıcı Adı");
+        txtUser.setStyle(inputStyle);
+        txtUser.setPrefWidth(300);
 
-        Label lblPass = new Label("Şifre:");
         PasswordField txtPass = new PasswordField();
-        txtPass.setPromptText("••••••");
-        txtPass.setStyle("-fx-padding: 8px; -fx-background-radius: 5; -fx-border-color: #ddd; -fx-border-radius: 5;");
+        txtPass.setPromptText("Şifre");
+        txtPass.setStyle(inputStyle);
+        txtPass.setPrefWidth(300);
 
-        formGrid.add(lblUser, 0, 0);
-        formGrid.add(txtUser, 0, 1);
-        formGrid.add(lblPass, 0, 2);
-        formGrid.add(txtPass, 0, 3);
+        // Grid'e ekle (Sadece kutuları ekliyoruz, labellara gerek kalmadı, prompt text var)
+        formGrid.add(txtUser, 0, 0);
+        formGrid.add(txtPass, 0, 1);
 
         GridPane.setHgrow(txtUser, Priority.ALWAYS);
         GridPane.setHgrow(txtPass, Priority.ALWAYS);
 
+        // Buton (Turuncu)
         Button btnLogin = new Button("GİRİŞ YAP");
         btnLogin.setMaxWidth(Double.MAX_VALUE);
         btnLogin.setPadding(new Insets(12));
@@ -71,13 +126,22 @@ public class GirisEkrani extends StackPane {
                         "-fx-background-radius: 5;" +
                         "-fx-cursor: hand;"
         );
+        btnLogin.setDefaultButton(true);
 
         btnLogin.setOnAction(e -> {
-            System.out.println("Giriş Yapılıyor... Kullanıcı: " + txtUser.getText());
+            System.out.println("Giriş: " + txtUser.getText());
+            // Burada Ana Ekrana geçiş yapılacak
         });
 
-        loginCard.getChildren().addAll(lblTitle, lblSubtitle, formGrid, btnLogin);
+        rightSide.getChildren().addAll(lblGirisBaslik, formGrid, btnLogin);
 
+        // =================================================================
+        // BİRLEŞTİRME
+        // =================================================================
+        // Sol ve Sağ tarafı yatay kartın içine koyuyoruz
+        loginCard.getChildren().addAll(leftSide, rightSide);
+
+        // Kartı ana panele (StackPane) ekliyoruz
         this.getChildren().add(loginCard);
-        }
+    }
 }
