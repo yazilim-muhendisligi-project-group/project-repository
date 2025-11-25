@@ -1,4 +1,4 @@
-package Model;
+package erciyes.edu.tr.bahar19.Model;
 
 public class User {
     private int id;

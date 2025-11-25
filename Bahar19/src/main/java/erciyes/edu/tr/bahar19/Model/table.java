@@ -1,4 +1,4 @@
-package Model;
+package erciyes.edu.tr.bahar19.Model;
 
 public class table {
     private int id;
