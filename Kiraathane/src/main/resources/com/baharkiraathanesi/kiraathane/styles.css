@@ -1,0 +1,120 @@
+/* Genel Arkaplan ve Fontlar */
+.root {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-background-color: #F5F5F5;
+}
+
+/* Başlıklar */
+.header-label {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+/* Ana Menü Kartları */
+.menu-card {
+    -fx-padding: 20;
+    -fx-background-color: transparent;
+    -fx-background-radius: 15;
+    -fx-transition: all 0.3s ease;
+}
+
+.menu-card:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.3);
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
+}
+
+/* Standart Butonlar */
+.button {
+    -fx-background-color: #2196F3; /* PDF'teki Mavi */
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+.button:hover {
+    -fx-background-color: #1976D2;
+}
+
+/* Kırmızı Buton (Silme/Kapatma) */
+.danger-button {
+    -fx-background-color: #F44336;
+}
+.danger-button:hover {
+    -fx-background-color: #D32F2F;
+}
+
+/* Yeşil Buton (Onay/Boş Masa) */
+.success-button {
+    -fx-background-color: #4CAF50;
+}
+
+/* Giriş Ekranı Kutusu */
+.login-box {
+    -fx-background-color: white;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);
+    -fx-background-radius: 10;
+    -fx-padding: 40;
+}
+
+/* Masa Butonları (PDF Sayfa 3'e göre) */
+.table-button-empty {
+    -fx-background-color: white;
+    -fx-border-color: #333;
+    -fx-border-width: 2;
+    -fx-border-radius: 5;
+    -fx-text-fill: #333;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.table-button-occupied {
+    -fx-background-color: #E040FB; /* PDF'teki Morumsu Renk */
+    -fx-border-color: #333;
+    -fx-border-width: 2;
+    -fx-border-radius: 5;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+/* --- TABLO TASARIMLARI (PDF Sayfa 4 ve 6 için) --- */
+
+.table-view {
+    -fx-background-color: white;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #f0f0f0; /* Başlık Arkaplanı */
+    -fx-background-radius: 5 5 0 0;
+}
+
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-size: 35px; /* Başlık Yüksekliği */
+    -fx-border-color: transparent transparent #ccc transparent;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #333;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.table-row-cell {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #eee transparent;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #fafafa; /* Tek/Çift satır ayrımı */
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #E3F2FD; /* Seçili satır rengi (Açık Mavi) */
+    -fx-text-fill: black;
+}
