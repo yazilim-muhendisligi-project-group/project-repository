@@ -49,10 +49,26 @@ public class MainMenuView extends BorderPane {
             // Sayfa Geçişi
             Scene currentScene = this.getScene();
             if(currentScene != null) {
-                currentScene.setRoot(new TablesView()); // <--- ARTIK YENİ SAYFAYA GİDİYOR
+                currentScene.setRoot(new TablesView());
             }
-        });        btnStok.setOnAction(e -> System.out.println("Stok ekranına gidiliyor..."));
-        btnZRaporu.setOnAction(e -> System.out.println("Z Raporu alınıyor..."));
+        });
+        btnStok.setOnAction(e -> {
+            System.out.println("Stok ekranına gidiliyor...");
+            Scene currentScene = btnStok.getScene();
+            if(currentScene != null) {
+                // Sayfayı değiştir
+                currentScene.setRoot(new StockView());
+            }
+        });
+
+
+        btnZRaporu.setOnAction(e -> {
+            System.out.println("Z Raporu alınıyor...");
+                    Scene currentScene = btnZRaporu.getScene();
+                    if(currentScene != null) {
+                        currentScene.setRoot(new ReportView());
+                    }
+        });
 
         centerMenu.getChildren().addAll(btnMasalar, btnStok, btnZRaporu);
         this.setCenter(centerMenu);

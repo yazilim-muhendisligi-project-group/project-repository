@@ -135,7 +135,10 @@ public class TablesView extends BorderPane {
         btnGit.setStyle("-fx-background-color: #B71C1C; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
         btnGit.setOnAction(e -> {
             System.out.println("Masa " + currentNumber + " detayına gidiliyor...");
-            // İleride buraya: scene.setRoot(new OrderView(currentNumber)); yazacağız.
+            Scene scene = this.getScene();
+            if (scene != null) {
+                scene.setRoot(new OrderView(currentNumber));
+            }
         });
 
         // Karta elemanları ekle
