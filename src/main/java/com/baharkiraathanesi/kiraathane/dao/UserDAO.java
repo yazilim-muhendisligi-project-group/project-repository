@@ -13,8 +13,15 @@ public class UserDAO {
         // SQL Sorgumuz: "Bu isimde ve bu şifrede bir kullanıcı var mı?"
         String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        Connection conn = null;
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null) {
+                System.err.println("⚠️ UserDAO: Veritabanı bağlantısı kurulamadı!");
+                return false;
+            }
+
+            PreparedStatement stmt = conn.prepareStatement(sql);
 
             // Soru işaretleri yerine gelen verileri koyuyoruz
             stmt.setString(1, username);
@@ -29,6 +36,14 @@ public class UserDAO {
 
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         return false; // Giriş Başarısız

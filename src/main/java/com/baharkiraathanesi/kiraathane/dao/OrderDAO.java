@@ -12,7 +12,14 @@ public class OrderDAO {
         // Önce açık sipariş var mı bakalım (is_paid = 0)
         String checkSql = "SELECT id FROM orders WHERE table_id = ? AND is_paid = FALSE";
 
-        try (Connection conn = DatabaseConnection.getConnection()) {
+        Connection conn = null;
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null) {
+                System.err.println("⚠️ OrderDAO: Veritabanı bağlantısı kurulamadı!");
+                return orderId;
+            }
+
             PreparedStatement checkStmt = conn.prepareStatement(checkSql);
             checkStmt.setInt(1, tableId);
             ResultSet rs = checkStmt.executeQuery();
@@ -37,8 +44,17 @@ public class OrderDAO {
                     tableDAO.updateTableStatus(tableId, true);
                 }
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return orderId;
     }

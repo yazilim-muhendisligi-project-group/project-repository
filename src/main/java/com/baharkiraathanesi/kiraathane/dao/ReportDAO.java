@@ -15,9 +15,16 @@ public class ReportDAO {
         // Sadece BUGÜNÜN ve ÖDENMİŞ siparişlerinin toplamını al
         String sql = "SELECT SUM(total_amount) FROM orders WHERE is_paid = TRUE AND DATE(created_at) = CURDATE()";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        Connection conn = null;
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null) {
+                System.err.println("⚠️ ReportDAO: Veritabanı bağlantısı kurulamadı!");
+                return totalRevenue;
+            }
+
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
 
             if (rs.next()) {
                 totalRevenue = rs.getDouble(1);
@@ -25,6 +32,14 @@ public class ReportDAO {
 
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return totalRevenue;
     }
@@ -34,9 +49,16 @@ public class ReportDAO {
         String sql = "SELECT DATE(created_at) AS report_date, SUM(total_amount) AS total_revenue, COUNT(*) AS total_orders " +
                      "FROM orders WHERE is_paid = TRUE GROUP BY DATE(created_at) ORDER BY report_date DESC";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        Connection conn = null;
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null) {
+                System.err.println("⚠️ ReportDAO: Veritabanı bağlantısı kurulamadı!");
+                return reports;
+            }
+
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
                 LocalDate date = rs.getDate("report_date").toLocalDate();
@@ -48,6 +70,14 @@ public class ReportDAO {
 
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         return reports;
@@ -75,13 +105,13 @@ public class ReportDAO {
 
                 // Transaction'ı onayla
                 conn.commit();
-                System.out.println("✅ Bugünkü veriler başarıyla sıfırlandı!");
+                System.out.println("Bugünkü veriler başarıyla sıfırlandı!");
                 return true;
 
             } catch (SQLException e) {
                 // Hata durumunda geri al
                 conn.rollback();
-                System.err.println("❌ Veri sıfırlama hatası: " + e.getMessage());
+                System.err.println("Veri sıfırlama hatası: " + e.getMessage());
                 e.printStackTrace();
                 return false;
             } finally {
@@ -89,7 +119,7 @@ public class ReportDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("❌ Database bağlantı hatası: " + e.getMessage());
+            System.err.println("Database bağlantı hatası: " + e.getMessage());
             e.printStackTrace();
             return false;
         }

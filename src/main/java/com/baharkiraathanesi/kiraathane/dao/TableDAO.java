@@ -13,9 +13,16 @@ public class TableDAO {
         List<Table> tableList = new ArrayList<>();
         String sql = "SELECT * FROM tables";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        Connection conn = null;
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null) {
+                System.err.println("⚠️ TableDAO: Veritabanı bağlantısı kurulamadı!");
+                return tableList; // Boş liste döndür
+            }
+
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
                 Table table = new Table(
@@ -27,6 +34,14 @@ public class TableDAO {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return tableList;
     }
@@ -59,7 +74,7 @@ public class TableDAO {
             return affectedRows > 0;
 
         } catch (SQLException e) {
-            System.err.println("❌ Masa eklenirken hata: " + e.getMessage());
+            System.err.println(" Masa eklenirken hata: " + e.getMessage());
             e.printStackTrace();
             return false;
         }

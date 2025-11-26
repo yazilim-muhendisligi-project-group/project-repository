@@ -13,9 +13,16 @@ public class ProductDAO {
         List<Product> productList = new ArrayList<>();
         String sql = "SELECT * FROM products";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        Connection conn = null;
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null) {
+                System.err.println("⚠️ ProductDAO: Veritabanı bağlantısı kurulamadı!");
+                return productList; // Boş liste döndür
+            }
+
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
                 // Yeni kolonlar var mı kontrol et
@@ -50,6 +57,14 @@ public class ProductDAO {
 
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return productList;
     }
