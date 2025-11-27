@@ -79,6 +79,17 @@ public class ReportController {
 
     @FXML
     private void printZReport() {
+        // Önce açık sipariş var mı kontrol et
+        if (orderDAO.hasOpenOrders()) {
+            Alert warningAlert = new Alert(Alert.AlertType.ERROR);
+            warningAlert.setTitle("Z Raporu Alınamaz");
+            warningAlert.setHeaderText("⚠️ Hesabı Kapatılmamış Masa Var!");
+            warningAlert.setContentText("Z raporu alabilmek için önce tüm masaların hesaplarını kapatmanız gerekmektedir.\n\n" +
+                "Lütfen açık hesapları kontrol edip kapatın.");
+            warningAlert.showAndWait();
+            return;
+        }
+
         // Allow creating Z report even if there are no sales (user wanted 0 TL report as well)
         // Onay al
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -87,7 +98,7 @@ public class ReportController {
 
         String content = "Toplam İşlem: " + (currentOrders == null ? 0 : currentOrders.size()) + "\n" +
             "Toplam Ciro: " + String.format("%.2f TL", currentRevenue) + "\n\n" +
-            "⚠️ Bu işlem geri alınamaz! Bugünkü veriler PDF'e kaydedilip sıfırlanacak.";
+            "️ Bu işlem geri alınamaz! Bugünkü veriler PDF'e kaydedilip sıfırlanacak.";
 
         confirmAlert.setContentText(content);
 
@@ -259,7 +270,7 @@ public class ReportController {
             document.save(file);
             document.close();
 
-            System.out.println("✅ PDF başarıyla oluşturuldu: " + file.getAbsolutePath());
+            System.out.println(" PDF başarıyla oluşturuldu: " + file.getAbsolutePath());
 
             // Veritabanını sıfırla
             boolean resetSuccess = reportDAO.resetDailyData();
@@ -285,7 +296,7 @@ public class ReportController {
             }
 
         } catch (IOException e) {
-            System.err.println("❌ PDF oluşturma hatası: " + e.getMessage());
+            System.out.println(" PDF oluşturma hatası: " + e.getMessage());
             e.printStackTrace();
 
             Alert errorAlert = new Alert(Alert.AlertType.ERROR);
@@ -313,7 +324,7 @@ public class ReportController {
             currentOrders = todayOrders == null ? new ArrayList<>() : todayOrders; // Mevcut siparişleri güncelle
 
             if (todayOrders != null && !todayOrders.isEmpty()) {
-                System.out.println("✅ " + todayOrders.size() + " adet bugünkü işlem bulundu");
+                System.out.println(" " + todayOrders.size() + " adet bugünkü işlem bulundu");
 
                 // Toplam ciro ve işlem sayısını hesapla
                 double totalRevenue = 0.0;
@@ -330,16 +341,16 @@ public class ReportController {
                 totalRevenueLabel.setText(String.format("%.2f TL", totalRevenue));
                 totalOrdersLabel.setText(String.valueOf(todayOrders.size()));
 
-                System.out.println("✅ Toplam ciro: " + totalRevenue + " TL");
+                System.out.println(" Toplam ciro: " + totalRevenue + " TL");
             } else {
-                System.out.println("⚠️ Bugün hiç satış yapılmamış");
+                System.out.println("⚠ Bugün hiç satış yapılmamış");
                 reportTable.setItems(FXCollections.observableArrayList());
                 totalRevenueLabel.setText("0.00 TL");
                 totalOrdersLabel.setText("0");
                 currentRevenue = 0.0;
             }
         } catch (Exception e) {
-            System.err.println("❌ ReportController Hatası: " + e.getMessage());
+            System.out.println(" ReportController Hatası: " + e.getMessage());
             e.printStackTrace();
             reportTable.setItems(FXCollections.observableArrayList());
             totalRevenueLabel.setText("0.00 TL");

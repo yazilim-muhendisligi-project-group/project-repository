@@ -3,6 +3,7 @@ package com.baharkiraathanesi.kiraathane;
 import com.baharkiraathanesi.kiraathane.dao.OrderDAO;
 import com.baharkiraathanesi.kiraathane.dao.ProductDAO;
 import com.baharkiraathanesi.kiraathane.model.Product;
+import com.baharkiraathanesi.kiraathane.model.OrderItem;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -15,15 +16,12 @@ import java.util.List;
 public class OrderController {
     @FXML private Label tableLabel;
     @FXML private FlowPane productsContainer;
-    @FXML private ListView<String> orderListView;
+    @FXML private ListView<OrderItem> orderListView;
     @FXML private Label totalLabel;
 
     private int currentTableId;
     private OrderDAO orderDAO = new OrderDAO();
     private ProductDAO productDAO = new ProductDAO();
-
-    // Basitlik olsun diye toplam tutarı burada tutuyoruz
-    private double currentTotal = 0;
 
     // Masalar ekranından buraya gelince çağrılır
     public void setTableInfo(int tableId, String tableName) {
@@ -31,10 +29,11 @@ public class OrderController {
         this.tableLabel.setText(tableName + " Sipariş Ekranı");
 
         loadProducts();
-        refreshOrderList(); // Var olan siparişi yükle (Şimdilik boş gelecek)
+        refreshOrderList(); // Var olan siparişleri veritabanından yükle
     }
 
     private void loadProducts() {
+        productsContainer.getChildren().clear();
         List<Product> products = productDAO.getAllProducts();
         for (Product p : products) {
             Button btn = new Button(p.getName() + "\n" + p.getPrice() + " TL");
@@ -43,31 +42,41 @@ public class OrderController {
             // Ürüne tıklayınca siparişe ekle
             btn.setOnAction(e -> {
                 orderDAO.addProductToOrder(currentTableId, p.getId(), 1);
-                // Listeye görsel olarak ekle (Normalde veritabanından tekrar çekmek daha doğru ama hızlı çözüm)
-                orderListView.getItems().add(p.getName() + " - " + p.getPrice() + " TL");
-                updateTotal(p.getPrice());
+                refreshOrderList(); // Listeyi güncelle
             });
 
             productsContainer.getChildren().add(btn);
         }
     }
 
-    private void updateTotal(double priceToAdd) {
-        currentTotal += priceToAdd;
-        totalLabel.setText("Toplam: " + currentTotal + " TL");
-    }
-
-    // Geçici çözüm: Sayfa ilk açıldığında veritabanından eski siparişi çekme kodu
-    // Şimdilik boş bırakıyoruz, eklediğin an görünür.
+    // Masanın mevcut siparişlerini veritabanından yükle
     private void refreshOrderList() {
         orderListView.getItems().clear();
-        currentTotal = 0;
-        totalLabel.setText("Toplam: 0.00 TL");
-        // Burayı geliştirebilirsin: orderDAO.getOrderItems(tableId) ile dolabilir.
+
+        List<OrderItem> items = orderDAO.getOrderItems(currentTableId);
+        double total = 0;
+
+        for (OrderItem item : items) {
+            orderListView.getItems().add(item);
+            total += item.getSubtotal();
+        }
+
+        totalLabel.setText("Toplam: " + String.format("%.2f", total) + " TL");
     }
 
     @FXML
     public void closeCheck() {
+        List<OrderItem> items = orderDAO.getOrderItems(currentTableId);
+
+        if (items.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Uyarı");
+            alert.setHeaderText(null);
+            alert.setContentText("Masada sipariş bulunmuyor!");
+            alert.showAndWait();
+            return;
+        }
+
         orderDAO.closeOrder(currentTableId);
 
         // Bilgi ver
@@ -82,26 +91,50 @@ public class OrderController {
 
     @FXML
     public void goBack() {
-        // changeScene expects a resource filename relative to / (resources root).
-        // Pass only the FXML filename that exists under src/main/resources.
         HelloApplication.changeScene("tables-view.fxml");
     }
 
     @FXML
     public void deleteSelectedItem() {
-        String selectedItem = orderListView.getSelectionModel().getSelectedItem();
+        OrderItem selectedItem = orderListView.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
-            orderListView.getItems().remove(selectedItem);
-            // Extract price from the selected item and update the total
-            double price = Double.parseDouble(selectedItem.split(" - ")[1].replace(" TL", ""));
-            updateTotal(-price);
+            // Veritabanından sil
+            orderDAO.removeOrderItem(selectedItem.getId(), selectedItem.getProductId(), selectedItem.getQuantity());
+            // Listeyi güncelle
+            refreshOrderList();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Uyarı");
+            alert.setHeaderText(null);
+            alert.setContentText("Lütfen silmek için bir ürün seçin!");
+            alert.showAndWait();
         }
     }
 
     @FXML
     public void clearAllItems() {
-        orderListView.getItems().clear();
-        currentTotal = 0;
-        totalLabel.setText("Toplam: 0.00 TL");
+        List<OrderItem> items = orderDAO.getOrderItems(currentTableId);
+
+        if (items.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Uyarı");
+            alert.setHeaderText(null);
+            alert.setContentText("Masada zaten sipariş bulunmuyor!");
+            alert.showAndWait();
+            return;
+        }
+
+        // Tüm kalemleri tek tek sil
+        for (OrderItem item : items) {
+            orderDAO.removeOrderItem(item.getId(), item.getProductId(), item.getQuantity());
+        }
+
+        refreshOrderList();
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Bilgi");
+        alert.setHeaderText(null);
+        alert.setContentText("Tüm siparişler temizlendi!");
+        alert.showAndWait();
     }
 }

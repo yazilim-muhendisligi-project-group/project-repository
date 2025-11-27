@@ -6,46 +6,85 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * User Data Access Object
+ * Kullanıcı işlemleri için veritabanı erişim katmanı
+ */
 public class UserDAO {
 
-    // Giriş Kontrolü Yapan Metot
-    public boolean login(String username, String password) {
-        // SQL Sorgumuz: "Bu isimde ve bu şifrede bir kullanıcı var mı?"
-        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+    /**
+     * Kullanıcı girişini doğrular
+     *
+     * @param username Kullanıcı adı
+     * @param password Şifre
+     * @return Giriş başarılıysa true, değilse false
+     */
+    public boolean authenticate(String username, String password) {
+        if (username == null || password == null || username.trim().isEmpty()) {
+            return false;
+        }
 
-        Connection conn = null;
-        try {
-            conn = DatabaseConnection.getConnection();
+        final String SQL = "SELECT id, username, role FROM users WHERE username = ? AND password = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SQL)) {
+
             if (conn == null) {
-                System.err.println("⚠️ UserDAO: Veritabanı bağlantısı kurulamadı!");
+                System.out.println("❌ UserDAO: Veritabanı bağlantısı kurulamadı!");
                 return false;
             }
 
-            PreparedStatement stmt = conn.prepareStatement(sql);
-
-            // Soru işaretleri yerine gelen verileri koyuyoruz
-            stmt.setString(1, username);
+            stmt.setString(1, username.trim());
             stmt.setString(2, password);
 
-            ResultSet rs = stmt.executeQuery();
-
-            // rs.next() true dönerse, böyle bir kullanıcı bulundu demektir
-            if (rs.next()) {
-                return true; // Giriş Başarılı
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String role = rs.getString("role");
+                    System.out.println("✅ Kullanıcı bulundu: " + username + " (Rol: " + role + ")");
+                    return true;
+                }
             }
 
         } catch (SQLException e) {
+            System.out.println("❌ UserDAO authenticate hatası: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
         }
 
-        return false; // Giriş Başarısız
+        return false;
+    }
+
+    /**
+     * Kullanıcının rolünü getirir
+     *
+     * @param username Kullanıcı adı
+     * @return Kullanıcı rolü (admin, user vb.), bulunamazsa null
+     */
+    public String getUserRole(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return null;
+        }
+
+        final String SQL = "SELECT role FROM users WHERE username = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SQL)) {
+
+            if (conn == null) {
+                return null;
+            }
+
+            stmt.setString(1, username.trim());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("role");
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("❌ UserDAO getUserRole hatası: " + e.getMessage());
+        }
+
+        return null;
     }
 }

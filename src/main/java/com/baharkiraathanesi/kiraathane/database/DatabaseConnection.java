@@ -3,49 +3,112 @@ package com.baharkiraathanesi.kiraathane.database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
+/**
+ * Veritabanı bağlantı yöneticisi
+ * Singleton pattern kullanarak MySQL bağlantısı sağlar
+ */
 public class DatabaseConnection {
 
-    // Veritabanı Bilgileri - ✅ Çalışan Konfigürasyon
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/bahar_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "selamveduaile";
+    private static final Logger LOGGER = Logger.getLogger(DatabaseConnection.class.getName());
 
-    // Bağlantı sağlayan metod
+    // Veritabanı Yapılandırması
+    private static final String DB_HOST = getEnv("DB_HOST", "localhost");
+    private static final String DB_PORT = getEnv("DB_PORT", "3306");
+    private static final String DB_NAME = getEnv("DB_NAME", "bahar_db");
+    private static final String DB_USER = getEnv("DB_USER", "root");
+    private static final String DB_PASSWORD = getEnv("DB_PASSWORD", "selamveduaile");
+
+    // Bağlantı URL'i
+    private static final String DB_URL = String.format(
+        "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8",
+        DB_HOST, DB_PORT, DB_NAME
+    );
+
+    // Singleton instance
+    private static Connection connection = null;
+
+    /**
+     * Private constructor - Singleton pattern
+     */
+    private DatabaseConnection() {
+        // Utility class, instantiation engellendi
+    }
+
+    /**
+     * Environment variable veya default değer döndürür
+     */
+    private static String getEnv(String key, String defaultValue) {
+        String value = System.getenv(key);
+        return (value != null && !value.isEmpty()) ? value : defaultValue;
+    }
+
+    /**
+     * Veritabanı bağlantısı sağlar
+     *
+     * @return MySQL bağlantısı, başarısızsa null
+     */
     public static Connection getConnection() {
-        Connection connection = null;
-
         try {
-            // 1. Adım: Veritabanı Sürücüsünü Çağır
-            Class.forName("com.mysql.cj.jdbc.Driver");
-
-            // Environment variable kontrolü (opsiyonel, production için)
-            String url = System.getenv("DB_URL") != null ? System.getenv("DB_URL") : DB_URL;
-            String user = System.getenv("DB_USER") != null ? System.getenv("DB_USER") : DB_USER;
-            String password = System.getenv("DB_PASSWORD") != null ? System.getenv("DB_PASSWORD") : DB_PASSWORD;
-
-            // 2. Adım: Bağlantıyı Kur
-            connection = DriverManager.getConnection(url, user, password);
+            // Mevcut bağlantı kapalı veya yoksa yeni oluştur
+            if (connection == null || connection.isClosed()) {
+                Class.forName("com.mysql.cj.jdbc.Driver");
+                connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+                LOGGER.info("✅ Veritabanı bağlantısı başarılı: " + DB_NAME);
+            }
+            return connection;
 
         } catch (ClassNotFoundException e) {
-            System.err.println("❌ MySQL Sürücüsü Bulunamadı! pom.xml dosyasını kontrol et.");
-            e.printStackTrace();
-        } catch (SQLException e) {
-            System.err.println("❌ VERİTABANI BAĞLANTI HATASI!");
-            System.err.println("┌─────────────────────────────────────────────────────────────┐");
-            System.err.println("│ Hata: " + e.getMessage());
-            System.err.println("│");
-            System.err.println("│ ÇÖZÜMLERİ DENE:");
-            System.err.println("│ 1. MySQL'in çalıştığından emin ol:");
-            System.err.println("│    sudo /usr/local/mysql/support-files/mysql.server start");
-            System.err.println("│");
-            System.err.println("│ 2. Şifreyi kontrol et (şu anki: " + DB_PASSWORD + ")");
-            System.err.println("│");
-            System.err.println("│ 3. Veritabanını kontrol et:");
-            System.err.println("│    /usr/local/mysql/bin/mysql -u root -p");
-            System.err.println("└─────────────────────────────────────────────────────────────┘");
-        }
+            LOGGER.info("⚠️ MySQL Driver bulunamadı! pom.xml'i kontrol edin.");
+            return null;
 
-        return connection;
+        } catch (SQLException e) {
+            LOGGER.info("⚠️ Veritabanı bağlantı hatası: " + e.getMessage());
+            System.out.println("\n┌─────────────────────────────────────────────────────────────┐");
+            System.out.println("│ ⚠️ VERİTABANI BAĞLANTISI KURULAMADI!");
+            System.out.println("│");
+            System.out.println("│ Hata: " + e.getMessage());
+            System.out.println("│");
+            System.out.println("│ ✅ ÇÖZÜM ADIMLARı:");
+            System.out.println("│ 1. MySQL'in çalıştığını kontrol edin:");
+            System.out.println("│    sudo /usr/local/mysql/support-files/mysql.server status");
+            System.out.println("│");
+            System.out.println("│ 2. Veritabanını kurun:");
+            System.out.println("│    /usr/local/mysql/bin/mysql -u root -p < setup_database.sql");
+            System.out.println("│");
+            System.out.println("│ 3. Bağlantı bilgilerini kontrol edin:");
+            System.out.println("│    Host: " + DB_HOST);
+            System.out.println("│    Port: " + DB_PORT);
+            System.out.println("│    Database: " + DB_NAME);
+            System.out.println("│    User: " + DB_USER);
+            System.out.println("└─────────────────────────────────────────────────────────────┘\n");
+            return null;
+        }
+    }
+
+    /**
+     * Bağlantıyı kapatır
+     */
+    public static void closeConnection() {
+        if (connection != null) {
+            try {
+                connection.close();
+                LOGGER.info("✅ Veritabanı bağlantısı kapatıldı");
+            } catch (SQLException e) {
+                LOGGER.info("⚠️ Bağlantı kapatılırken hata oluştu: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Bağlantı test metodu
+     */
+    public static boolean testConnection() {
+        try (Connection conn = getConnection()) {
+            return conn != null && !conn.isClosed();
+        } catch (SQLException e) {
+            return false;
+        }
     }
 }

@@ -15,7 +15,7 @@ public class Launcher {
                 System.out.println("✅ Logging yapılandırması yüklendi - PDFBox uyarıları gizlendi");
             }
         } catch (Exception e) {
-            System.err.println("⚠️ Logging yapılandırması yüklenemedi: " + e.getMessage());
+            System.out.println("⚠️ Logging yapılandırması yüklenemedi: " + e.getMessage());
         }
 
         Application.launch(HelloApplication.class, args);

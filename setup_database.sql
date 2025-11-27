@@ -14,7 +14,11 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Varsayılan kullanıcı ekle (varsa güncelle)
+-- Varsayılan kullanıcıları ekle (varsa güncelle)
+INSERT INTO users (username, password, role)
+VALUES ('yonetici', '1234', 'admin')
+ON DUPLICATE KEY UPDATE password='1234', role='admin';
+
 INSERT INTO users (username, password, role)
 VALUES ('admin', 'admin123', 'admin')
 ON DUPLICATE KEY UPDATE password='admin123', role='admin';
@@ -35,7 +39,7 @@ CREATE TABLE IF NOT EXISTS products (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- 3. TABLES Tablosu (Kıraathane masaları)
+-- 3. TABLES Tablosu (Kıraathane masaları) - SADECE 15 MASA
 CREATE TABLE IF NOT EXISTS tables (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
@@ -43,16 +47,16 @@ CREATE TABLE IF NOT EXISTS tables (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Varsayılan masaları ekle (eğer yoksa)
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 1', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 2', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 3', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 4', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 5', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 6', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 7', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 8', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 9', FALSE);
+-- Varsayılan 15 masayı ekle (eğer yoksa)
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 1' , FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 2' , FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 3' , FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 4' , FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 5' , FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 6' , FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 7' , FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 8' , FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 9' , FALSE);
 INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 10', FALSE);
 INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 11', FALSE);
 INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 12', FALSE);
@@ -108,6 +112,9 @@ VALUES
 ('Türk Kahvesi (Sütlü)', 'Sıcak İçecek', 40.00, 60, 'fincan', 20, 3, 20, '3 paket (60 fincan)'),
 ('Sıcak Çikolata', 'Sıcak İçecek', 30.00, 100, 'bardak', 30, 2, 50, '2 paket (100 bardak)'),
 ('Salep', 'Sıcak İçecek', 35.00, 80, 'bardak', 30, 2, 40, '2 paket (80 bardak)');
+
+-- Fazla masaları sil (sadece 15 masa kalmalı)
+DELETE FROM tables WHERE id > 15;
 
 -- Kurulum tamamlandı mesajı
 SELECT '✅ Veritabanı başarıyla kuruldu!' AS status;

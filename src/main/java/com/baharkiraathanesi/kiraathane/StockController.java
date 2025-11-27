@@ -13,8 +13,15 @@ import javafx.scene.layout.GridPane;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
+/**
+ * Stok yönetimi kontrolcüsü
+ * Ürün ekleme, silme ve stok güncelleme işlemlerini yönetir
+ */
 public class StockController {
+
+    private static final Logger LOGGER = Logger.getLogger(StockController.class.getName());
 
     @FXML
     private TableView<Product> stockTable;
@@ -130,14 +137,21 @@ public class StockController {
         TextField priceField = new TextField();
         priceField.setPromptText("Fiyat (TL)");
 
-        // Stok
-        TextField stockField = new TextField();
-        stockField.setPromptText("Başlangıç Stok Miktarı");
+        // Paket sayısı (YENİ SİSTEM)
+        TextField packageField = new TextField();
+        packageField.setPromptText("Örn: 5 (paket)");
+        packageField.setText("1");
+
+        // Paket başına porsiyon (YENİ SİSTEM)
+        TextField portionField = new TextField();
+        portionField.setPromptText("Örn: 200 (bardak/paket)");
+        portionField.setText("1");
 
         // Birim seçimi
         ComboBox<String> unitCombo = new ComboBox<>();
-        unitCombo.getItems().addAll("Adet", "Porsiyon", "Fincan", "Bardak", "Tabak", "Dilim", "Kg", "Gr");
+        unitCombo.getItems().addAll("adet", "porsiyon", "fincan", "bardak", "tabak", "dilim", "kg", "gr");
         unitCombo.setPromptText("Birim Seçin");
+        unitCombo.setValue("adet");
 
         grid.add(new Label("Ürün Adı:"), 0, 0);
         grid.add(nameField, 1, 0);
@@ -149,10 +163,12 @@ public class StockController {
         grid.add(detailCategoryCombo, 1, 3);
         grid.add(new Label("Fiyat (TL):"), 0, 4);
         grid.add(priceField, 1, 4);
-        grid.add(new Label("Stok Miktarı:"), 0, 5);
-        grid.add(stockField, 1, 5);
-        grid.add(new Label("Birim:"), 0, 6);
-        grid.add(unitCombo, 1, 6);
+        grid.add(new Label("Paket Sayısı:"), 0, 5);
+        grid.add(packageField, 1, 5);
+        grid.add(new Label("Paket Başına Porsiyon:"), 0, 6);
+        grid.add(portionField, 1, 6);
+        grid.add(new Label("Birim:"), 0, 7);
+        grid.add(unitCombo, 1, 7);
 
         dialog.getDialogPane().setContent(grid);
         Platform.runLater(nameField::requestFocus);
@@ -165,11 +181,16 @@ public class StockController {
                     String subCat = subCategoryCombo.getValue();
                     String detailCat = detailCategoryCombo.getValue();
                     double price = Double.parseDouble(priceField.getText().trim());
-                    int stock = Integer.parseInt(stockField.getText().trim());
+                    int stockPackage = Integer.parseInt(packageField.getText().trim());
+                    int portionsPerPackage = Integer.parseInt(portionField.getText().trim());
                     String unit = unitCombo.getValue();
 
                     if (name.isEmpty() || mainCat == null || subCat == null || unit == null) {
                         throw new IllegalArgumentException("Zorunlu alanlar doldurulmalıdır!");
+                    }
+
+                    if (stockPackage <= 0 || portionsPerPackage <= 0) {
+                        throw new IllegalArgumentException("Paket ve porsiyon sayısı pozitif olmalıdır!");
                     }
 
                     // Kategoriyi birleştir: "İçecek > Sıcak İçecek > Kahve"
@@ -178,26 +199,35 @@ public class StockController {
                         fullCategory += " > " + detailCat;
                     }
 
-                    boolean success = productDAO.addProduct(name, fullCategory, price, stock, unit);
+                    // YENİ SİSTEM: 6 parametre (name, category, price, stockPackage, unit, portionsPerPackage)
+                    boolean success = productDAO.addProduct(name, fullCategory, price, stockPackage, unit, portionsPerPackage);
+
                     if (success) {
-                        System.out.println("✅ Yeni ürün eklendi: " + name + " (" + fullCategory + ")");
+                        int totalStock = stockPackage * portionsPerPackage;
+                        LOGGER.info("✅ Yeni ürün eklendi: " + name + " (" + fullCategory + ") - "
+                                   + stockPackage + " paket × " + portionsPerPackage + " = " + totalStock + " " + unit);
                         loadStockData();
 
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Başarılı");
-                        alert.setContentText("Ürün başarıyla eklendi!\n" + name + "\n" + fullCategory);
+                        alert.setContentText("Ürün başarıyla eklendi!\n\n"
+                                           + "Ürün: " + name + "\n"
+                                           + "Kategori: " + fullCategory + "\n"
+                                           + "Stok: " + stockPackage + " paket × " + portionsPerPackage
+                                           + " = " + totalStock + " " + unit);
                         alert.showAndWait();
                     }
                 } catch (NumberFormatException e) {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Hata");
-                    alert.setContentText("Fiyat ve stok sayısal değer olmalıdır!");
+                    alert.setContentText("Fiyat, paket sayısı ve porsiyon sayısı sayısal değer olmalıdır!");
                     alert.showAndWait();
                 } catch (Exception e) {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Hata");
                     alert.setContentText("Hata: " + e.getMessage());
                     alert.showAndWait();
+                    LOGGER.info("❌ Ürün eklenirken hata: " + e.getMessage());
                 }
             }
             return null;
@@ -285,7 +315,7 @@ public class StockController {
 
     private void loadStockData() {
         try {
-            System.out.println("Stok verileri yükleniyor...");
+            LOGGER.info("Stok verileri yükleniyor...");
 
             // Sütunları konfigür et
             productNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -298,21 +328,20 @@ public class StockController {
             List<Product> productList = productDAO.getAllProducts();
 
             if (productList != null) {
-                System.out.println("✅ " + productList.size() + " ürün bulundu");
+                LOGGER.info("✅ " + productList.size() + " ürün bulundu");
 
                 // ObservableList'e dönüştür
                 ObservableList<Product> products = FXCollections.observableArrayList(productList);
 
                 // Tabloya ekle
                 stockTable.setItems(products);
-                System.out.println("✅ Stok tablosu başarıyla dolduruldu!");
+                LOGGER.info("✅ Stok tablosu başarıyla dolduruldu!");
             } else {
-                System.out.println("❌ Ürün listesi NULL!");
+                LOGGER.info("⚠️ Ürün listesi NULL!");
                 stockTable.setItems(FXCollections.observableArrayList());
             }
         } catch (Exception e) {
-            System.err.println("❌ StockController Hatası: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.info("❌ StockController Hatası: " + e.getMessage());
         }
     }
 

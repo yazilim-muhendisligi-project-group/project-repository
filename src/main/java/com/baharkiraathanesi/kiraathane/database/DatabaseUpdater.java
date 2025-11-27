@@ -26,7 +26,7 @@ public class DatabaseUpdater {
             conn = DatabaseConnection.getConnection();
 
             if (conn == null) {
-                System.err.println("❌ Veritabanı bağlantısı kurulamadı!");
+                System.out.println("Veritabanı bağlantısı kurulamadı!");
                 return;
             }
 
@@ -37,7 +37,7 @@ public class DatabaseUpdater {
             // Yeni kolonları ekle (hata verirse devam et)
             try {
                 stmt.execute("ALTER TABLE products ADD COLUMN stock_package INT DEFAULT 0 COMMENT 'Paket sayısı'");
-                System.out.println("   ✅ stock_package kolonu eklendi");
+                System.out.println("     stock_package kolonu eklendi");
             } catch (SQLException e) {
                 System.out.println("   ℹ️  stock_package zaten var");
             }
@@ -89,7 +89,7 @@ public class DatabaseUpdater {
 
             // Eklenen ürünleri listele
             var rs = stmt.executeQuery("SELECT name, stock_display, price FROM products ORDER BY name");
-            System.out.println("\n🎉 Mevcut Ürünler:");
+            System.out.println("\n  Mevcut Ürünler:");
             System.out.println("─────────────────────────────────────────────");
             int count = 0;
             while (rs.next()) {
@@ -108,7 +108,7 @@ public class DatabaseUpdater {
             System.out.println("\n💡 Artık uygulamayı çalıştırabilirsiniz!");
 
         } catch (SQLException e) {
-            System.err.println("❌ Hata oluştu: " + e.getMessage());
+            System.out.println("  Hata oluştu: " + e.getMessage());
             e.printStackTrace();
         } finally {
             try {

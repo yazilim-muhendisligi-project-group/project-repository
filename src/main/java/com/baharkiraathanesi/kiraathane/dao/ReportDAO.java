@@ -19,7 +19,7 @@ public class ReportDAO {
         try {
             conn = DatabaseConnection.getConnection();
             if (conn == null) {
-                System.err.println("⚠️ ReportDAO: Veritabanı bağlantısı kurulamadı!");
+                System.out.println("ReportDAO: Veritabanı bağlantısı kurulamadı!");
                 return totalRevenue;
             }
 
@@ -53,7 +53,7 @@ public class ReportDAO {
         try {
             conn = DatabaseConnection.getConnection();
             if (conn == null) {
-                System.err.println("⚠️ ReportDAO: Veritabanı bağlantısı kurulamadı!");
+                System.out.println("ReportDAO: Veritabanı bağlantısı kurulamadı!");
                 return reports;
             }
 
@@ -111,7 +111,7 @@ public class ReportDAO {
             } catch (SQLException e) {
                 // Hata durumunda geri al
                 conn.rollback();
-                System.err.println("Veri sıfırlama hatası: " + e.getMessage());
+                System.out.println("Veri sıfırlama hatası: " + e.getMessage());
                 e.printStackTrace();
                 return false;
             } finally {
@@ -119,7 +119,7 @@ public class ReportDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Database bağlantı hatası: " + e.getMessage());
+            System.out.println("Database bağlantı hatası: " + e.getMessage());
             e.printStackTrace();
             return false;
         }

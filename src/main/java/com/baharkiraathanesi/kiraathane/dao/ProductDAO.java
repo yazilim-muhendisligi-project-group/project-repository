@@ -5,83 +5,92 @@ import com.baharkiraathanesi.kiraathane.model.Product;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+/**
+ * Product Data Access Object
+ * Ürün işlemleri için veritabanı erişim katmanı
+ */
 public class ProductDAO {
 
-    // Tüm ürünleri listeleme metodu - YENİ: Paket/Porsiyon bilgileriyle
+    private static final Logger LOGGER = Logger.getLogger(ProductDAO.class.getName());
+
+    /**
+     * Tüm ürünleri getirir
+     *
+     * @return Ürün listesi, hata durumunda boş liste
+     */
     public List<Product> getAllProducts() {
         List<Product> productList = new ArrayList<>();
-        String sql = "SELECT * FROM products";
+        final String SQL = "SELECT * FROM products ORDER BY name";
 
-        Connection conn = null;
-        try {
-            conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(SQL)) {
+
             if (conn == null) {
-                System.err.println("⚠️ ProductDAO: Veritabanı bağlantısı kurulamadı!");
-                return productList; // Boş liste döndür
+                LOGGER.info("❌ ProductDAO: Veritabanı bağlantısı kurulamadı!");
+                return productList;
             }
-
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
-                // Yeni kolonlar var mı kontrol et
-                try {
-                    Product product = new Product(
-                            rs.getInt("id"),
-                            rs.getString("name"),
-                            rs.getString("category"),
-                            rs.getDouble("price"),
-                            rs.getInt("stock_qty"),
-                            rs.getString("unit"),
-                            rs.getInt("critical_level"),
-                            rs.getInt("stock_package"),
-                            rs.getInt("portions_per_package"),
-                            rs.getString("stock_display")
-                    );
-                    productList.add(product);
-                } catch (SQLException e) {
-                    // Eski veritabanı yapısı (yeni kolonlar yoksa)
-                    Product product = new Product(
-                            rs.getInt("id"),
-                            rs.getString("name"),
-                            rs.getString("category"),
-                            rs.getDouble("price"),
-                            rs.getInt("stock_qty"),
-                            rs.getString("unit"),
-                            rs.getInt("critical_level")
-                    );
-                    productList.add(product);
-                }
+                Product product = new Product(
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("category"),
+                    rs.getDouble("price"),
+                    rs.getInt("stock_qty"),
+                    rs.getString("unit"),
+                    rs.getInt("critical_level"),
+                    rs.getInt("stock_package"),
+                    rs.getInt("portions_per_package"),
+                    rs.getString("stock_display")
+                );
+                productList.add(product);
             }
 
+            LOGGER.info("✅ " + productList.size() + " ürün getirildi");
+
         } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
+            LOGGER.log(Level.SEVERE, "❌ Ürünler getirilirken hata oluştu", e);
         }
+
         return productList;
     }
 
-    // Yeni ürün ekleme - Paket/Porsiyon sistemiyle
+    /**
+     * Yeni ürün ekler (paket bazlı)
+     *
+     * @param name Ürün adı
+     * @param category Kategori
+     * @param price Fiyat
+     * @param stockPackage Paket sayısı
+     * @param unit Birim (bardak, fincan vb.)
+     * @param portionsPerPackage Paket başına porsiyon
+     * @return Başarılıysa true
+     */
     public boolean addProduct(String name, String category, double price, int stockPackage,
-                            String unit, int portionsPerPackage) {
+                              String unit, int portionsPerPackage) {
+        if (name == null || name.trim().isEmpty()) {
+            LOGGER.info("⚠️ Ürün adı boş olamaz!");
+            return false;
+        }
+
         int stockQty = stockPackage * portionsPerPackage;
         String stockDisplay = stockPackage + " paket (" + stockQty + " " + unit + ")";
 
-        String sql = "INSERT INTO products (name, category, price, stock_qty, unit, critical_level, " +
-                    "stock_package, portions_per_package, stock_display) VALUES (?, ?, ?, ?, ?, 10, ?, ?, ?)";
+        final String SQL = "INSERT INTO products (name, category, price, stock_qty, unit, critical_level, " +
+                          "stock_package, portions_per_package, stock_display) VALUES (?, ?, ?, ?, ?, 10, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
-            stmt.setString(1, name);
+            if (conn == null) {
+                return false;
+            }
+
+            stmt.setString(1, name.trim());
             stmt.setString(2, category);
             stmt.setDouble(3, price);
             stmt.setInt(4, stockQty);
@@ -91,70 +100,174 @@ public class ProductDAO {
             stmt.setString(8, stockDisplay);
 
             int affectedRows = stmt.executeUpdate();
-            return affectedRows > 0;
+            if (affectedRows > 0) {
+                LOGGER.info("✅ Ürün eklendi: " + name);
+                return true;
+            }
 
         } catch (SQLException e) {
-            System.err.println("❌ Ürün eklenirken hata: " + e.getMessage());
-            e.printStackTrace();
-            return false;
+            LOGGER.log(Level.SEVERE, "❌ Ürün eklenirken hata: " + name, e);
         }
+
+        return false;
     }
 
-    // ESKİ METOT - Geriye dönük uyumluluk için
-    public boolean addProduct(String name, String category, double price, int stockQty, String unit) {
-        return addProduct(name, category, price, 1, unit, stockQty);
-    }
-
-    // Ürün silme
+    /**
+     * Ürün siler
+     *
+     * @param productId Silinecek ürün ID
+     * @return Başarılıysa true
+     */
     public boolean deleteProduct(int productId) {
-        String sql = "DELETE FROM products WHERE id = ?";
+        final String SQL = "DELETE FROM products WHERE id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(SQL)) {
+
+            if (conn == null) {
+                return false;
+            }
 
             stmt.setInt(1, productId);
             int affectedRows = stmt.executeUpdate();
-            return affectedRows > 0;
+
+            if (affectedRows > 0) {
+                LOGGER.info("✅ Ürün silindi: ID=" + productId);
+                return true;
+            }
 
         } catch (SQLException e) {
-            System.err.println("❌ Ürün silinirken hata: " + e.getMessage());
-            e.printStackTrace();
-            return false;
+            LOGGER.log(Level.SEVERE, "❌ Ürün silinirken hata: ID=" + productId, e);
         }
+
+        return false;
     }
 
-    // Stok güncelleme - PAKET bazlı
+    /**
+     * Ürün stok miktarını günceller (paket bazlı)
+     *
+     * @param productId Ürün ID
+     * @param newStockPackage Yeni paket sayısı
+     * @return Başarılıysa true
+     */
     public boolean updateProductStock(int productId, int newStockPackage) {
-        // Önce ürünün portions_per_package değerini al
-        String selectSql = "SELECT portions_per_package FROM products WHERE id = ?";
+        final String SELECT_SQL = "SELECT portions_per_package, name FROM products WHERE id = ?";
+        final String UPDATE_SQL = "UPDATE products SET stock_package = ?, stock_qty = ?, " +
+                                 "stock_display = ? WHERE id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement selectStmt = conn.prepareStatement(selectSql)) {
+             PreparedStatement selectStmt = conn.prepareStatement(SELECT_SQL)) {
+
+            if (conn == null) {
+                return false;
+            }
 
             selectStmt.setInt(1, productId);
             ResultSet rs = selectStmt.executeQuery();
 
             if (rs.next()) {
                 int portionsPerPackage = rs.getInt("portions_per_package");
+                String name = rs.getString("name");
                 int newStockQty = newStockPackage * portionsPerPackage;
+                String stockDisplay = newStockPackage + " paket (" + newStockQty + " porsiyon)";
 
-                // Stok güncelleme
-                String updateSql = "UPDATE products SET stock_package = ?, stock_qty = ? WHERE id = ?";
-                try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                try (PreparedStatement updateStmt = conn.prepareStatement(UPDATE_SQL)) {
                     updateStmt.setInt(1, newStockPackage);
                     updateStmt.setInt(2, newStockQty);
-                    updateStmt.setInt(3, productId);
+                    updateStmt.setString(3, stockDisplay);
+                    updateStmt.setInt(4, productId);
 
                     int affectedRows = updateStmt.executeUpdate();
-                    return affectedRows > 0;
+                    if (affectedRows > 0) {
+                        LOGGER.info("✅ Stok güncellendi: " + name + " -> " + newStockPackage + " paket");
+                        return true;
+                    }
                 }
             }
-            return false;
 
         } catch (SQLException e) {
-            System.err.println("❌ Stok güncellenirken hata: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "❌ Stok güncellenirken hata: ID=" + productId, e);
+        }
+
+        return false;
+    }
+
+    /**
+     * Ürün fiyatını günceller
+     *
+     * @param productId Ürün ID
+     * @param newPrice Yeni fiyat
+     * @return Başarılıysa true
+     */
+    public boolean updateProductPrice(int productId, double newPrice) {
+        if (newPrice < 0) {
+            LOGGER.info("⚠️ Fiyat negatif olamaz!");
             return false;
         }
+
+        final String SQL = "UPDATE products SET price = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SQL)) {
+
+            if (conn == null) {
+                return false;
+            }
+
+            stmt.setDouble(1, newPrice);
+            stmt.setInt(2, productId);
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows > 0) {
+                LOGGER.info("✅ Fiyat güncellendi: ID=" + productId + " -> " + newPrice + " TL");
+                return true;
+            }
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "❌ Fiyat güncellenirken hata: ID=" + productId, e);
+        }
+
+        return false;
+    }
+
+    /**
+     * ID'ye göre ürün getirir
+     *
+     * @param productId Ürün ID
+     * @return Ürün nesnesi, bulunamazsa null
+     */
+    public Product getProductById(int productId) {
+        final String SQL = "SELECT * FROM products WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SQL)) {
+
+            if (conn == null) {
+                return null;
+            }
+
+            stmt.setInt(1, productId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Product(
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("category"),
+                    rs.getDouble("price"),
+                    rs.getInt("stock_qty"),
+                    rs.getString("unit"),
+                    rs.getInt("critical_level"),
+                    rs.getInt("stock_package"),
+                    rs.getInt("portions_per_package"),
+                    rs.getString("stock_display")
+                );
+            }
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "❌ Ürün getirilirken hata: ID=" + productId, e);
+        }
+
+        return null;
     }
 }
