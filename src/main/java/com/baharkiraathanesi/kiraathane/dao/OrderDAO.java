@@ -5,11 +5,8 @@ import java.sql.*;
 
 public class OrderDAO {
 
-    // 1. Masada açık bir sipariş var mı? Varsa ID'sini getir, yoksa yeni oluştur.
     public int getOrCreateOrderId(int tableId) {
         int orderId = -1;
-
-        // Önce açık sipariş var mı bakalım (is_paid = 0)
         String checkSql = "SELECT id FROM orders WHERE table_id = ? AND is_paid = FALSE";
 
         Connection conn = null;
@@ -25,21 +22,17 @@ public class OrderDAO {
             ResultSet rs = checkStmt.executeQuery();
 
             if (rs.next()) {
-                // Açık sipariş bulduk
                 orderId = rs.getInt("id");
             } else {
-                // Yokmuş, o zaman yeni sipariş açalım
                 String createSql = "INSERT INTO orders (table_id, is_paid) VALUES (?, FALSE)";
                 PreparedStatement createStmt = conn.prepareStatement(createSql, Statement.RETURN_GENERATED_KEYS);
                 createStmt.setInt(1, tableId);
                 createStmt.executeUpdate();
 
-                // Yeni oluşan ID'yi al
                 ResultSet genKeys = createStmt.getGeneratedKeys();
                 if (genKeys.next()) {
                     orderId = genKeys.getInt(1);
 
-                    // Masayı da "DOLU" yapalım
                     TableDAO tableDAO = new TableDAO();
                     tableDAO.updateTableStatus(tableId, true);
                 }
@@ -59,12 +52,10 @@ public class OrderDAO {
         return orderId;
     }
 
-    // 2. Siparişe Ürün Ekleme (En Kritik Metot)
     public void addProductToOrder(int tableId, int productId, int quantity) {
-        int orderId = getOrCreateOrderId(tableId); // Masa için sipariş fişini bul
+        int orderId = getOrCreateOrderId(tableId);
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // A) Ürünün Fiyatını Bul
             String priceSql = "SELECT price FROM products WHERE id = ?";
             PreparedStatement priceStmt = conn.prepareStatement(priceSql);
             priceStmt.setInt(1, productId);
@@ -73,7 +64,6 @@ public class OrderDAO {
             double price = 0;
             if (rs.next()) price = rs.getDouble("price");
 
-            // B) Sipariş Detayına Ekle
             String itemSql = "INSERT INTO order_items (order_id, product_id, quantity, price_at_order) VALUES (?, ?, ?, ?)";
             PreparedStatement itemStmt = conn.prepareStatement(itemSql);
             itemStmt.setInt(1, orderId);
@@ -82,48 +72,38 @@ public class OrderDAO {
             itemStmt.setDouble(4, price);
             itemStmt.executeUpdate();
 
-            // C) Siparişin Toplam Tutarını Güncelle
             String totalSql = "UPDATE orders SET total_amount = total_amount + ? WHERE id = ?";
             PreparedStatement totalStmt = conn.prepareStatement(totalSql);
             totalStmt.setDouble(1, price * quantity);
             totalStmt.setInt(2, orderId);
             totalStmt.executeUpdate();
 
-            // D) Stoğu Düş (Rapor Gereksinimi: Madde 186)
             String stockSql = "UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?";
             PreparedStatement stockStmt = conn.prepareStatement(stockSql);
             stockStmt.setInt(1, quantity);
             stockStmt.setInt(2, productId);
             stockStmt.executeUpdate();
 
-            System.out.println("Sipariş Eklendi: Masa " + tableId + " -> Ürün ID: " + productId);
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    // 3. Hesabı Kapat (Ödeme Al)
     public void closeOrder(int tableId) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Açık siparişi bul ve 'Ödendi' yap
             String sql = "UPDATE orders SET is_paid = TRUE WHERE table_id = ? AND is_paid = FALSE";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, tableId);
             stmt.executeUpdate();
 
-            // Masayı BOŞ yap
             TableDAO tableDAO = new TableDAO();
             tableDAO.updateTableStatus(tableId, false);
-
-            System.out.println("Hesap Kapatıldı! Masa " + tableId + " artık boş.");
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    // 4. Bugünkü Tamamlanmış Siparişleri Getir (Z Raporu için)
     public java.util.List<com.baharkiraathanesi.kiraathane.model.Order> getTodayCompletedOrders() {
         java.util.List<com.baharkiraathanesi.kiraathane.model.Order> orders = new java.util.ArrayList<>();
 
@@ -144,7 +124,6 @@ public class OrderDAO {
                 order.setTableName(rs.getString("table_name"));
                 order.setTotal(rs.getDouble("total_amount"));
 
-                // Saat bilgisini formatla
                 Timestamp timestamp = rs.getTimestamp("created_at");
                 if (timestamp != null) {
                     order.setOrderTime(timestamp.toLocalDateTime().toLocalTime().toString());
@@ -162,7 +141,6 @@ public class OrderDAO {
         return orders;
     }
 
-    // 5. Açık (Ödenmemiş) Sipariş Var mı Kontrol Et
     public boolean hasOpenOrders() {
         String sql = "SELECT COUNT(*) as open_count FROM orders WHERE is_paid = FALSE";
 
@@ -183,7 +161,6 @@ public class OrderDAO {
         return false;
     }
 
-    // 6. Belirli Bir Masanın Açık Sipariş Detaylarını Getir
     public java.util.List<com.baharkiraathanesi.kiraathane.model.OrderItem> getOrderItems(int tableId) {
         java.util.List<com.baharkiraathanesi.kiraathane.model.OrderItem> items = new java.util.ArrayList<>();
 
@@ -214,17 +191,15 @@ public class OrderDAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("❌ Sipariş detayları alınırken hata: " + e.getMessage());
+            System.out.println("Sipariş detayları alınırken hata: " + e.getMessage());
             e.printStackTrace();
         }
 
         return items;
     }
 
-    // 7. Sipariş Kalemi Silme (Ürünü Sipariş Listesinden Çıkarma)
     public void removeOrderItem(int orderItemId, int productId, int quantity) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // A) Önce order_id ve fiyat bilgisini al (silmeden önce!)
             String infoSql = "SELECT order_id, price_at_order FROM order_items WHERE id = ?";
             PreparedStatement infoStmt = conn.prepareStatement(infoSql);
             infoStmt.setInt(1, orderItemId);
@@ -237,13 +212,11 @@ public class OrderDAO {
                 priceAtOrder = rs.getDouble("price_at_order");
             }
 
-            // B) Sipariş kalemini sil
             String deleteSql = "DELETE FROM order_items WHERE id = ?";
             PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
             deleteStmt.setInt(1, orderItemId);
             deleteStmt.executeUpdate();
 
-            // C) Siparişin toplam tutarını güncelle
             if (orderId > 0) {
                 String totalSql = "UPDATE orders SET total_amount = total_amount - ? WHERE id = ?";
                 PreparedStatement totalStmt = conn.prepareStatement(totalSql);
@@ -252,14 +225,12 @@ public class OrderDAO {
                 totalStmt.executeUpdate();
             }
 
-            // D) Stoğu geri ekle
             String stockSql = "UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?";
             PreparedStatement stockStmt = conn.prepareStatement(stockSql);
             stockStmt.setInt(1, quantity);
             stockStmt.setInt(2, productId);
             stockStmt.executeUpdate();
 
-            System.out.println("Sipariş kalemi silindi: ID " + orderItemId);
 
         } catch (SQLException e) {
             System.out.println("Sipariş kalemi silinirken hata: " + e.getMessage());

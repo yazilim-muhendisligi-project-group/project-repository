@@ -4,18 +4,12 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.SQLException;
 
-/**
- * Veritabanını güncellemek için utility sınıfı
- * Bu sınıfı bir kez çalıştırın, sonra silebilirsiniz
- */
 public class DatabaseUpdater {
 
     public static void main(String[] args) {
-        System.out.println("=== Veritabanı Güncelleme Başlatılıyor ===");
-
+        System.out.println("Veritabanı Güncelleme Başlatılıyor");
         updateDatabase();
-
-        System.out.println("=== İşlem Tamamlandı ===");
+        System.out.println("İşlem Tamamlandı");
     }
 
     public static void updateDatabase() {
@@ -32,49 +26,44 @@ public class DatabaseUpdater {
 
             stmt = conn.createStatement();
 
-            System.out.println("📋 1/3 - Yeni kolonlar ekleniyor...");
+            System.out.println("1/3 - Yeni kolonlar ekleniyor...");
 
-            // Yeni kolonları ekle (hata verirse devam et)
             try {
                 stmt.execute("ALTER TABLE products ADD COLUMN stock_package INT DEFAULT 0 COMMENT 'Paket sayısı'");
-                System.out.println("     stock_package kolonu eklendi");
+                System.out.println("   stock_package kolonu eklendi");
             } catch (SQLException e) {
-                System.out.println("   ℹ️  stock_package zaten var");
+                System.out.println("   stock_package zaten var");
             }
 
             try {
                 stmt.execute("ALTER TABLE products ADD COLUMN portions_per_package INT DEFAULT 1 COMMENT 'Paket başına porsiyon'");
-                System.out.println("   ✅ portions_per_package kolonu eklendi");
+                System.out.println("   portions_per_package kolonu eklendi");
             } catch (SQLException e) {
-                System.out.println("   ℹ️  portions_per_package zaten var");
+                System.out.println("   portions_per_package zaten var");
             }
 
             try {
                 stmt.execute("ALTER TABLE products ADD COLUMN stock_display VARCHAR(100) DEFAULT NULL COMMENT 'Stok gösterimi'");
-                System.out.println("   ✅ stock_display kolonu eklendi");
+                System.out.println("   stock_display kolonu eklendi");
             } catch (SQLException e) {
-                System.out.println("   ℹ️  stock_display zaten var");
+                System.out.println("   stock_display zaten var");
             }
 
-            System.out.println("\n📋 2/3 - Mevcut ürünler güncelleniyor/temizleniyor...");
+            System.out.println("\n2/3 - Mevcut ürünler güncelleniyor/temizleniyor...");
 
-            // Önce mevcut ürünleri güncelle (eğer varsa)
             stmt.executeUpdate("UPDATE products SET stock_package = FLOOR(stock_qty / GREATEST(portions_per_package, 1)) WHERE portions_per_package > 0");
 
-            // Eski ürünleri sil (foreign key sorunu yoksa)
             try {
                 int deletedRows = stmt.executeUpdate("DELETE FROM products");
-                System.out.println("   ✅ " + deletedRows + " eski ürün silindi");
+                System.out.println("   " + deletedRows + " eski ürün silindi");
             } catch (SQLException e) {
-                System.out.println("   ⚠️  Mevcut ürünler silinemedi (sipariş bağlantısı var), güncelleme yapılacak...");
-                // Ürünleri sil yerine güncelle
+                System.out.println("   Mevcut ürünler silinemedi (sipariş bağlantısı var), güncelleme yapılacak...");
                 stmt.executeUpdate("DELETE FROM products WHERE id NOT IN (SELECT DISTINCT product_id FROM order_items)");
-                System.out.println("   ✅ Kullanılmayan ürünler silindi");
+                System.out.println("   Kullanılmayan ürünler silindi");
             }
 
-            System.out.println("\n📋 3/3 - Yeni ürünler ekleniyor...");
+            System.out.println("\n3/3 - Yeni ürünler ekleniyor...");
 
-            // Her ürün için önce var mı kontrol et, yoksa ekle
             addProductIfNotExists(stmt, "Çay", "Sıcak İçecek", 15.00, 1000, "bardak", 100, 5, 200);
             addProductIfNotExists(stmt, "Portakallı Oralet", "Sıcak İçecek", 25.00, 150, "bardak", 50, 3, 50);
             addProductIfNotExists(stmt, "Şeftali Oralet", "Sıcak İçecek", 25.00, 150, "bardak", 50, 3, 50);
@@ -85,15 +74,14 @@ public class DatabaseUpdater {
             addProductIfNotExists(stmt, "Ihlamur", "Sıcak İçecek", 20.00, 100, "bardak", 50, 2, 50);
             addProductIfNotExists(stmt, "Kaçak Çay", "Sıcak İçecek", 20.00, 600, "bardak", 100, 3, 200);
 
-            System.out.println("\n📋 Kontrol ediliyor...");
+            System.out.println("\nKontrol ediliyor...");
 
-            // Eklenen ürünleri listele
             var rs = stmt.executeQuery("SELECT name, stock_display, price FROM products ORDER BY name");
-            System.out.println("\n  Mevcut Ürünler:");
+            System.out.println("\nMevcut Ürünler:");
             System.out.println("─────────────────────────────────────────────");
             int count = 0;
             while (rs.next()) {
-                System.out.printf("   • %-20s : %-25s : %.2f TL%n",
+                System.out.printf("   %-20s : %-25s : %.2f TL%n",
                     rs.getString("name"),
                     rs.getString("stock_display"),
                     rs.getDouble("price")
@@ -102,13 +90,13 @@ public class DatabaseUpdater {
             }
             System.out.println("─────────────────────────────────────────────");
 
-            System.out.println("\n✅ VERİTABANI BAŞARIYLA GÜNCELLENDİ!");
-            System.out.println("✅ " + count + " ürün mevcut");
-            System.out.println("✅ Paket/Porsiyon sistemi aktif");
-            System.out.println("\n💡 Artık uygulamayı çalıştırabilirsiniz!");
+            System.out.println("\nVERİTABANI BAŞARIYLA GÜNCELLENDİ!");
+            System.out.println(count + " ürün mevcut");
+            System.out.println("Paket/Porsiyon sistemi aktif");
+            System.out.println("\nArtık uygulamayı çalıştırabilirsiniz!");
 
         } catch (SQLException e) {
-            System.out.println("  Hata oluştu: " + e.getMessage());
+            System.out.println("Hata oluştu: " + e.getMessage());
             e.printStackTrace();
         } finally {
             try {
@@ -123,11 +111,9 @@ public class DatabaseUpdater {
     private static void addProductIfNotExists(Statement stmt, String name, String category,
                                              double price, int stockQty, String unit,
                                              int criticalLevel, int stockPackage, int portionsPerPackage) throws SQLException {
-        // Önce ürün var mı kontrol et
         var rs = stmt.executeQuery("SELECT id FROM products WHERE name = '" + name.replace("'", "''") + "'");
 
         if (rs.next()) {
-            // Ürün var, güncelle
             int id = rs.getInt("id");
             String stockDisplay = stockPackage + " paket (" + stockQty + " " + unit + ")";
             stmt.executeUpdate(String.format(
@@ -135,16 +121,15 @@ public class DatabaseUpdater {
                 "critical_level=%d, stock_package=%d, portions_per_package=%d, stock_display='%s' WHERE id=%d",
                 category, price, stockQty, unit, criticalLevel, stockPackage, portionsPerPackage, stockDisplay, id
             ));
-            System.out.println("   🔄 " + name + " güncellendi");
+            System.out.println("   " + name + " güncellendi");
         } else {
-            // Ürün yok, ekle
             String stockDisplay = stockPackage + " paket (" + stockQty + " " + unit + ")";
             stmt.executeUpdate(String.format(
                 "INSERT INTO products (name, category, price, stock_qty, unit, critical_level, stock_package, portions_per_package, stock_display) " +
                 "VALUES ('%s', '%s', %.2f, %d, '%s', %d, %d, %d, '%s')",
                 name, category, price, stockQty, unit, criticalLevel, stockPackage, portionsPerPackage, stockDisplay
             ));
-            System.out.println("   ✅ " + name + " eklendi");
+            System.out.println("   " + name + " eklendi");
         }
     }
 }

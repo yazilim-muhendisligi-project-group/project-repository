@@ -6,19 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * User Data Access Object
- * Kullanıcı işlemleri için veritabanı erişim katmanı
- */
 public class UserDAO {
 
-    /**
-     * Kullanıcı girişini doğrular
-     *
-     * @param username Kullanıcı adı
-     * @param password Şifre
-     * @return Giriş başarılıysa true, değilse false
-     */
     public boolean authenticate(String username, String password) {
         if (username == null || password == null || username.trim().isEmpty()) {
             return false;
@@ -30,7 +19,7 @@ public class UserDAO {
              PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
             if (conn == null) {
-                System.out.println("❌ UserDAO: Veritabanı bağlantısı kurulamadı!");
+                System.out.println("UserDAO: Veritabanı bağlantısı kurulamadı!");
                 return false;
             }
 
@@ -40,25 +29,19 @@ public class UserDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     String role = rs.getString("role");
-                    System.out.println("✅ Kullanıcı bulundu: " + username + " (Rol: " + role + ")");
+                    System.out.println("Kullanıcı bulundu: " + username + " (Rol: " + role + ")");
                     return true;
                 }
             }
 
         } catch (SQLException e) {
-            System.out.println("❌ UserDAO authenticate hatası: " + e.getMessage());
+            System.out.println("UserDAO authenticate hatası: " + e.getMessage());
             e.printStackTrace();
         }
 
         return false;
     }
 
-    /**
-     * Kullanıcının rolünü getirir
-     *
-     * @param username Kullanıcı adı
-     * @return Kullanıcı rolü (admin, user vb.), bulunamazsa null
-     */
     public String getUserRole(String username) {
         if (username == null || username.trim().isEmpty()) {
             return null;
@@ -82,7 +65,7 @@ public class UserDAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("❌ UserDAO getUserRole hatası: " + e.getMessage());
+            System.out.println("UserDAO getUserRole hatası: " + e.getMessage());
         }
 
         return null;

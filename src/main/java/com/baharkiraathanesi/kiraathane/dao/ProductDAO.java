@@ -8,19 +8,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Product Data Access Object
- * Ürün işlemleri için veritabanı erişim katmanı
- */
 public class ProductDAO {
 
     private static final Logger LOGGER = Logger.getLogger(ProductDAO.class.getName());
 
-    /**
-     * Tüm ürünleri getirir
-     *
-     * @return Ürün listesi, hata durumunda boş liste
-     */
     public List<Product> getAllProducts() {
         List<Product> productList = new ArrayList<>();
         final String SQL = "SELECT * FROM products ORDER BY name";
@@ -30,7 +21,7 @@ public class ProductDAO {
              ResultSet rs = stmt.executeQuery(SQL)) {
 
             if (conn == null) {
-                LOGGER.info("❌ ProductDAO: Veritabanı bağlantısı kurulamadı!");
+                LOGGER.info("ProductDAO: Veritabanı bağlantısı kurulamadı!");
                 return productList;
             }
 
@@ -50,30 +41,19 @@ public class ProductDAO {
                 productList.add(product);
             }
 
-            LOGGER.info("✅ " + productList.size() + " ürün getirildi");
+            LOGGER.info(productList.size() + " ürün getirildi");
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "❌ Ürünler getirilirken hata oluştu", e);
+            LOGGER.log(Level.SEVERE, "Ürünler getirilirken hata oluştu", e);
         }
 
         return productList;
     }
 
-    /**
-     * Yeni ürün ekler (paket bazlı)
-     *
-     * @param name Ürün adı
-     * @param category Kategori
-     * @param price Fiyat
-     * @param stockPackage Paket sayısı
-     * @param unit Birim (bardak, fincan vb.)
-     * @param portionsPerPackage Paket başına porsiyon
-     * @return Başarılıysa true
-     */
     public boolean addProduct(String name, String category, double price, int stockPackage,
                               String unit, int portionsPerPackage) {
         if (name == null || name.trim().isEmpty()) {
-            LOGGER.info("⚠️ Ürün adı boş olamaz!");
+            LOGGER.info("Ürün adı boş olamaz!");
             return false;
         }
 
@@ -101,23 +81,17 @@ public class ProductDAO {
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
-                LOGGER.info("✅ Ürün eklendi: " + name);
+                LOGGER.info("Ürün eklendi: " + name);
                 return true;
             }
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "❌ Ürün eklenirken hata: " + name, e);
+            LOGGER.log(Level.SEVERE, "Ürün eklenirken hata: " + name, e);
         }
 
         return false;
     }
 
-    /**
-     * Ürün siler
-     *
-     * @param productId Silinecek ürün ID
-     * @return Başarılıysa true
-     */
     public boolean deleteProduct(int productId) {
         final String SQL = "DELETE FROM products WHERE id = ?";
 
@@ -132,24 +106,17 @@ public class ProductDAO {
             int affectedRows = stmt.executeUpdate();
 
             if (affectedRows > 0) {
-                LOGGER.info("✅ Ürün silindi: ID=" + productId);
+                LOGGER.info("Ürün silindi: ID=" + productId);
                 return true;
             }
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "❌ Ürün silinirken hata: ID=" + productId, e);
+            LOGGER.log(Level.SEVERE, "Ürün silinirken hata: ID=" + productId, e);
         }
 
         return false;
     }
 
-    /**
-     * Ürün stok miktarını günceller (paket bazlı)
-     *
-     * @param productId Ürün ID
-     * @param newStockPackage Yeni paket sayısı
-     * @return Başarılıysa true
-     */
     public boolean updateProductStock(int productId, int newStockPackage) {
         final String SELECT_SQL = "SELECT portions_per_package, name FROM products WHERE id = ?";
         final String UPDATE_SQL = "UPDATE products SET stock_package = ?, stock_qty = ?, " +
@@ -179,32 +146,20 @@ public class ProductDAO {
 
                     int affectedRows = updateStmt.executeUpdate();
                     if (affectedRows > 0) {
-                        LOGGER.info("✅ Stok güncellendi: " + name + " -> " + newStockPackage + " paket");
+                        LOGGER.info("Stok güncellendi: " + name + " -> " + newStockPackage + " paket");
                         return true;
                     }
                 }
             }
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "❌ Stok güncellenirken hata: ID=" + productId, e);
+            LOGGER.log(Level.SEVERE, "Stok güncellenirken hata: ID=" + productId, e);
         }
 
         return false;
     }
 
-    /**
-     * Ürün fiyatını günceller
-     *
-     * @param productId Ürün ID
-     * @param newPrice Yeni fiyat
-     * @return Başarılıysa true
-     */
     public boolean updateProductPrice(int productId, double newPrice) {
-        if (newPrice < 0) {
-            LOGGER.info("⚠️ Fiyat negatif olamaz!");
-            return false;
-        }
-
         final String SQL = "UPDATE products SET price = ? WHERE id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -219,12 +174,12 @@ public class ProductDAO {
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
-                LOGGER.info("✅ Fiyat güncellendi: ID=" + productId + " -> " + newPrice + " TL");
+                LOGGER.info("Fiyat güncellendi: ID=" + productId + " -> " + newPrice + " TL");
                 return true;
             }
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "❌ Fiyat güncellenirken hata: ID=" + productId, e);
+            LOGGER.log(Level.SEVERE, "Fiyat güncellenirken hata: ID=" + productId, e);
         }
 
         return false;
@@ -265,7 +220,7 @@ public class ProductDAO {
             }
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "❌ Ürün getirilirken hata: ID=" + productId, e);
+            LOGGER.log(Level.SEVERE, "Ürün getirilirken hata: ID=" + productId, e);
         }
 
         return null;

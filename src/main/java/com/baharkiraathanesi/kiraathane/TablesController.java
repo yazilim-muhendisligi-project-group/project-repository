@@ -45,7 +45,7 @@ public class TablesController {
                 boolean success = tableDAO.addTable(tableName.trim());
 
                 if (success) {
-                    System.out.println("✅ Yeni masa eklendi: " + tableName);
+                    System.out.println("Yeni masa eklendi: " + tableName);
                     refreshTables();
 
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -76,13 +76,10 @@ public class TablesController {
                     (t.isOccupied() ? "#ff4444;" : "#4CAF50;") +
                     "-fx-text-fill: white;");
 
-            // Sol tık: Masaya git
             btn.setOnMouseClicked(e -> {
                 if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1) {
                     openOrderScreen(t.getId(), t.getName());
-                }
-                // Sağ tık: Masayı sil
-                else if (e.getButton() == MouseButton.SECONDARY) {
+                } else if (e.getButton() == MouseButton.SECONDARY) {
                     deleteTable(t.getId(), t.getName(), t.isOccupied());
                 }
             });
@@ -112,7 +109,7 @@ public class TablesController {
             boolean success = tableDAO.deleteTable(tableId);
 
             if (success) {
-                System.out.println("✅ Masa silindi: " + tableName);
+                System.out.println("Masa silindi: " + tableName);
                 refreshTables();
 
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
