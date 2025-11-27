@@ -3,6 +3,7 @@ package com.baharkiraathanesi.kiraathane;
 import com.baharkiraathanesi.kiraathane.dao.OrderDAO;
 import com.baharkiraathanesi.kiraathane.dao.ProductDAO;
 import com.baharkiraathanesi.kiraathane.model.Product;
+import com.baharkiraathanesi.kiraathane.model.OrderItem;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -31,7 +32,7 @@ public class OrderController {
         this.tableLabel.setText(tableName + " Sipariş Ekranı");
 
         loadProducts();
-        refreshOrderList(); // Var olan siparişi yükle (Şimdilik boş gelecek)
+        refreshOrderList(); // Var olan siparişi veritabanından yükle
     }
 
     private void loadProducts() {
@@ -43,9 +44,8 @@ public class OrderController {
             // Ürüne tıklayınca siparişe ekle
             btn.setOnAction(e -> {
                 orderDAO.addProductToOrder(currentTableId, p.getId(), 1);
-                // Listeye görsel olarak ekle (Normalde veritabanından tekrar çekmek daha doğru ama hızlı çözüm)
-                orderListView.getItems().add(p.getName() + " - " + p.getPrice() + " TL");
-                updateTotal(p.getPrice());
+                // Veritabanından tekrar yükle
+                refreshOrderList();
             });
 
             productsContainer.getChildren().add(btn);
@@ -54,30 +54,55 @@ public class OrderController {
 
     private void updateTotal(double priceToAdd) {
         currentTotal += priceToAdd;
-        totalLabel.setText("Toplam: " + currentTotal + " TL");
+        totalLabel.setText("Toplam: " + String.format("%.2f", currentTotal) + " TL");
     }
 
-    // Geçici çözüm: Sayfa ilk açıldığında veritabanından eski siparişi çekme kodu
-    // Şimdilik boş bırakıyoruz, eklediğin an görünür.
+    // Artık veritabanından masanın açık sipariş kalemlerini çekecek
     private void refreshOrderList() {
         orderListView.getItems().clear();
         currentTotal = 0;
-        totalLabel.setText("Toplam: 0.00 TL");
-        // Burayı geliştirebilirsin: orderDAO.getOrderItems(tableId) ile dolabilir.
+
+        List<OrderItem> items = orderDAO.getOrderItemsForTable(currentTableId);
+        if (items != null) {
+            for (OrderItem it : items) {
+                orderListView.getItems().add(it.toString());
+                currentTotal += it.getPrice() * it.getQuantity();
+            }
+        }
+        totalLabel.setText("Toplam: " + String.format("%.2f", currentTotal) + " TL");
     }
 
     @FXML
     public void closeCheck() {
-        orderDAO.closeOrder(currentTableId);
+        // Kapatmadan önce sipariş kalemi var mı kontrol et
+        List<OrderItem> items = orderDAO.getOrderItemsForTable(currentTableId);
+        if (items != null && !items.isEmpty()) {
+            // Ödeme alınıp siparişler ödenmediği sürece kapatma engellenir
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Ödeme Onayı");
+            alert.setHeaderText("Hesabı kapatmak üzeresiniz");
+            alert.setContentText("Hesabı kapatmak istediğinize emin misiniz? İşlem masayı boşaltır.");
 
-        // Bilgi ver
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Ödeme");
-        alert.setHeaderText(null);
-        alert.setContentText("Hesap kapatıldı ve tahsil edildi!");
-        alert.showAndWait();
-
-        goBack(); // Masalara dön
+            java.util.Optional<javafx.scene.control.ButtonType> res = alert.showAndWait();
+            if (res.isPresent() && res.get() == javafx.scene.control.ButtonType.OK) {
+                orderDAO.closeOrder(currentTableId);
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setTitle("Ödeme");
+                info.setHeaderText(null);
+                info.setContentText("Hesap kapatıldı ve tahsil edildi!");
+                info.showAndWait();
+                goBack();
+            }
+        } else {
+            // Eğer zaten kalem yoksa doğrudan kapat
+            orderDAO.closeOrder(currentTableId);
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Ödeme");
+            alert.setHeaderText(null);
+            alert.setContentText("Hesap kapatıldı ve tahsil edildi!");
+            alert.showAndWait();
+            goBack();
+        }
     }
 
     @FXML
@@ -91,17 +116,45 @@ public class OrderController {
     public void deleteSelectedItem() {
         String selectedItem = orderListView.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
-            orderListView.getItems().remove(selectedItem);
-            // Extract price from the selected item and update the total
-            double price = Double.parseDouble(selectedItem.split(" - ")[1].replace(" TL", ""));
-            updateTotal(-price);
+            // Selected string format: "productName xQ (price TL)" as defined in OrderItem.toString()
+            // We need a robust way: fetch items and match by string to find orderItemId
+            List<OrderItem> items = orderDAO.getOrderItemsForTable(currentTableId);
+            OrderItem target = null;
+            for (OrderItem it : items) {
+                if (it.toString().equals(selectedItem)) {
+                    target = it;
+                    break;
+                }
+            }
+
+            if (target != null) {
+                boolean ok = orderDAO.deleteOrderItem(target.getId());
+                if (ok) {
+                    refreshOrderList();
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Hata");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Öğe veritabanından silinemedi.");
+                    alert.showAndWait();
+                }
+            }
         }
     }
 
     @FXML
     public void clearAllItems() {
-        orderListView.getItems().clear();
-        currentTotal = 0;
-        totalLabel.setText("Toplam: 0.00 TL");
+        // Bu uygulamada tüm kalemleri tek tek silmek karmaşık olabilir; kullanıcıyı uyar
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Hepsini Temizle");
+        alert.setHeaderText("Tüm sipariş kalemlerini silmek üzeresiniz");
+        alert.setContentText("Bu işlem geri alınamaz. Onaylıyor musunuz?");
+
+        java.util.Optional<javafx.scene.control.ButtonType> res = alert.showAndWait();
+        if (res.isPresent() && res.get() == javafx.scene.control.ButtonType.OK) {
+            // Basit yöntem: hesabı kapat ve dolaylı olarak kalemleri temizle
+            orderDAO.closeOrder(currentTableId);
+            refreshOrderList();
+        }
     }
 }

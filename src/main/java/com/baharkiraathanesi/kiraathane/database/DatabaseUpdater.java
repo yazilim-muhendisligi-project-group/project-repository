@@ -34,6 +34,23 @@ public class DatabaseUpdater {
 
             System.out.println("📋 1/3 - Yeni kolonlar ekleniyor...");
 
+            // Eğer products tablosu yoksa önce oluştur
+            try {
+                stmt.execute("CREATE TABLE IF NOT EXISTS products (" +
+                        "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                        "name VARCHAR(255) NOT NULL, " +
+                        "category VARCHAR(255), " +
+                        "price DOUBLE DEFAULT 0, " +
+                        "stock_qty INT DEFAULT 0, " +
+                        "unit VARCHAR(50), " +
+                        "critical_level INT DEFAULT 0" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                System.out.println("   ✅ products tablosu oluşturuldu veya zaten var");
+            } catch (SQLException e) {
+                System.out.println("   ⚠️ products tablosu oluşturulurken hata: " + e.getMessage());
+                e.printStackTrace();
+            }
+
             // Yeni kolonları ekle (hata verirse devam et)
             try {
                 stmt.execute("ALTER TABLE products ADD COLUMN stock_package INT DEFAULT 0 COMMENT 'Paket sayısı'");
@@ -47,6 +64,7 @@ public class DatabaseUpdater {
                 System.out.println("   ✅ portions_per_package kolonu eklendi");
             } catch (SQLException e) {
                 System.out.println("   ℹ️  portions_per_package zaten var");
+                e.printStackTrace();
             }
 
             try {
@@ -54,6 +72,60 @@ public class DatabaseUpdater {
                 System.out.println("   ✅ stock_display kolonu eklendi");
             } catch (SQLException e) {
                 System.out.println("   ℹ️  stock_display zaten var");
+                e.printStackTrace();
+            }
+
+            // Diğer gerekli tabloları oluştur (orders, order_items, tables, users)
+            try {
+                stmt.execute("CREATE TABLE IF NOT EXISTS tables (" +
+                        "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                        "name VARCHAR(100) NOT NULL, " +
+                        "is_occupied BOOLEAN DEFAULT FALSE" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                System.out.println("   ✅ tables tablosu oluşturuldu veya zaten var");
+            } catch (SQLException e) {
+                System.out.println("   ⚠️ tables tablosu oluşturulurken hata: " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            try {
+                stmt.execute("CREATE TABLE IF NOT EXISTS orders (" +
+                        "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                        "table_id INT, " +
+                        "is_paid BOOLEAN DEFAULT FALSE, " +
+                        "total_amount DOUBLE DEFAULT 0, " +
+                        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                System.out.println("   ✅ orders tablosu oluşturuldu veya zaten var");
+            } catch (SQLException e) {
+                System.out.println("   ⚠️ orders tablosu oluşturulurken hata: " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            try {
+                stmt.execute("CREATE TABLE IF NOT EXISTS order_items (" +
+                        "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                        "order_id INT, " +
+                        "product_id INT, " +
+                        "quantity INT DEFAULT 0, " +
+                        "price_at_order DOUBLE DEFAULT 0" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                System.out.println("   ✅ order_items tablosu oluşturuldu veya zaten var");
+            } catch (SQLException e) {
+                System.out.println("   ⚠️ order_items tablosu oluşturulurken hata: " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            try {
+                stmt.execute("CREATE TABLE IF NOT EXISTS users (" +
+                        "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                        "username VARCHAR(100) NOT NULL UNIQUE, " +
+                        "password VARCHAR(255) NOT NULL" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                System.out.println("   ✅ users tablosu oluşturuldu veya zaten var");
+            } catch (SQLException e) {
+                System.out.println("   ⚠️ users tablosu oluşturulurken hata: " + e.getMessage());
+                e.printStackTrace();
             }
 
             System.out.println("\n📋 2/3 - Mevcut ürünler güncelleniyor/temizleniyor...");
@@ -84,6 +156,20 @@ public class DatabaseUpdater {
             addProductIfNotExists(stmt, "Türk Kahvesi", "Sıcak İçecek", 35.00, 80, "fincan", 20, 4, 20);
             addProductIfNotExists(stmt, "Ihlamur", "Sıcak İçecek", 20.00, 100, "bardak", 50, 2, 50);
             addProductIfNotExists(stmt, "Kaçak Çay", "Sıcak İçecek", 20.00, 600, "bardak", 100, 3, 200);
+
+            // Eğer tables tablosunda hiç kayıt yoksa, birkaç varsayılan masa ekle
+            try {
+                var rsTables = stmt.executeQuery("SELECT COUNT(*) AS cnt FROM tables");
+                if (rsTables.next() && rsTables.getInt("cnt") == 0) {
+                    stmt.executeUpdate("INSERT INTO tables (name, is_occupied) VALUES ('Masa 1', FALSE)");
+                    stmt.executeUpdate("INSERT INTO tables (name, is_occupied) VALUES ('Masa 2', FALSE)");
+                    stmt.executeUpdate("INSERT INTO tables (name, is_occupied) VALUES ('Masa 3', FALSE)");
+                    stmt.executeUpdate("INSERT INTO tables (name, is_occupied) VALUES ('Masa 4', FALSE)");
+                    System.out.println("   ✅ Varsayılan masalar eklendi");
+                }
+            } catch (SQLException e) {
+                System.out.println("   ⚠️ Varsayılan masa ekleme sırasında hata: " + e.getMessage());
+            }
 
             System.out.println("\n📋 Kontrol ediliyor...");
 

@@ -1,6 +1,7 @@
 package com.baharkiraathanesi.kiraathane.dao;
 
 import com.baharkiraathanesi.kiraathane.database.DatabaseConnection;
+import com.baharkiraathanesi.kiraathane.database.DatabaseUpdater;
 import com.baharkiraathanesi.kiraathane.model.Table;
 import java.sql.*;
 import java.util.ArrayList;
@@ -26,7 +27,35 @@ public class TableDAO {
                 tableList.add(table);
             }
         } catch (SQLException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "";
             e.printStackTrace();
+            if (msg.contains("doesn't exist") || msg.toLowerCase().contains("does not exist") || msg.toLowerCase().contains("unknown table")) {
+                System.err.println("❌ 'tables' tablosu bulunamadı - veritabanı güncellemesi çalıştırılıyor...");
+                try {
+                    DatabaseUpdater.updateDatabase();
+                } catch (Exception ex) {
+                    System.err.println("❌ Veritabanı güncellemesi başarısız: " + ex.getMessage());
+                }
+
+                // Tekrar dene
+                try (Connection conn2 = DatabaseConnection.getConnection();
+                     Statement stmt2 = conn2.createStatement();
+                     ResultSet rs2 = stmt2.executeQuery(sql)) {
+
+                    while (rs2.next()) {
+                        Table table = new Table(
+                                rs2.getInt("id"),
+                                rs2.getString("name"),
+                                rs2.getBoolean("is_occupied")
+                        );
+                        tableList.add(table);
+                    }
+
+                } catch (SQLException ex2) {
+                    System.err.println("❌ Yeniden deneme sırasında hata: " + ex2.getMessage());
+                    ex2.printStackTrace();
+                }
+            }
         }
         return tableList;
     }
@@ -59,7 +88,29 @@ public class TableDAO {
             return affectedRows > 0;
 
         } catch (SQLException e) {
-            System.err.println("❌ Masa eklenirken hata: " + e.getMessage());
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            System.err.println("❌ Masa eklenirken hata: " + msg);
+            if (msg.contains("doesn't exist") || msg.toLowerCase().contains("does not exist") || msg.toLowerCase().contains("unknown table")) {
+                System.err.println("❌ 'tables' tablosu bulunamadı - veritabanı güncellemesi çalıştırılıyor...");
+                try {
+                    DatabaseUpdater.updateDatabase();
+                } catch (Exception ex) {
+                    System.err.println("❌ Veritabanı güncellemesi başarısız: " + ex.getMessage());
+                }
+
+                // Tekrar dene
+                try (Connection conn2 = DatabaseConnection.getConnection();
+                     PreparedStatement stmt2 = conn2.prepareStatement(sql)) {
+                    stmt2.setString(1, tableName);
+                    int affectedRows = stmt2.executeUpdate();
+                    return affectedRows > 0;
+                } catch (SQLException ex2) {
+                    System.err.println("❌ Yeniden deneme sırasında hata: " + ex2.getMessage());
+                    ex2.printStackTrace();
+                    return false;
+                }
+            }
+
             e.printStackTrace();
             return false;
         }

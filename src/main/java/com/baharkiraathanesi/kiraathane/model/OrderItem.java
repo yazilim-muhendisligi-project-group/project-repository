@@ -13,6 +13,22 @@ public class OrderItem {
         this.price = price;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
     @Override
     public String toString() {
         return productName + " x" + quantity + " (" + (price * quantity) + " TL)";

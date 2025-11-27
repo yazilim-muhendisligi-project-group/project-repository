@@ -1,6 +1,7 @@
 package com.baharkiraathanesi.kiraathane.dao;
 
 import com.baharkiraathanesi.kiraathane.database.DatabaseConnection;
+import com.baharkiraathanesi.kiraathane.database.DatabaseUpdater;
 import com.baharkiraathanesi.kiraathane.model.Product;
 import java.sql.*;
 import java.util.ArrayList;
@@ -49,7 +50,57 @@ public class ProductDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            // Eğer tablo mevcut değilse, veritabanını güncellemeyi deneyelim ve bir kez daha deneyelim
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            if (msg.contains("doesn't exist") || msg.toLowerCase().contains("does not exist") || msg.toLowerCase().contains("unknown table")) {
+                System.err.println("❌ 'products' tablosu bulunamadı - veritabanı güncellemesi çalıştırılıyor...");
+                try {
+                    DatabaseUpdater.updateDatabase();
+                } catch (Exception ex) {
+                    System.err.println("❌ Veritabanı güncellemesi başarısız: " + ex.getMessage());
+                }
+
+                // Tekrar dene
+                try (Connection conn2 = DatabaseConnection.getConnection();
+                     Statement stmt2 = conn2.createStatement();
+                     ResultSet rs2 = stmt2.executeQuery(sql)) {
+
+                    while (rs2.next()) {
+                        try {
+                            Product product = new Product(
+                                    rs2.getInt("id"),
+                                    rs2.getString("name"),
+                                    rs2.getString("category"),
+                                    rs2.getDouble("price"),
+                                    rs2.getInt("stock_qty"),
+                                    rs2.getString("unit"),
+                                    rs2.getInt("critical_level"),
+                                    rs2.getInt("stock_package"),
+                                    rs2.getInt("portions_per_package"),
+                                    rs2.getString("stock_display")
+                            );
+                            productList.add(product);
+                        } catch (SQLException inner) {
+                            Product product = new Product(
+                                    rs2.getInt("id"),
+                                    rs2.getString("name"),
+                                    rs2.getString("category"),
+                                    rs2.getDouble("price"),
+                                    rs2.getInt("stock_qty"),
+                                    rs2.getString("unit"),
+                                    rs2.getInt("critical_level")
+                            );
+                            productList.add(product);
+                        }
+                    }
+
+                } catch (SQLException ex2) {
+                    System.err.println("❌ Yeniden deneme sırasında hata: " + ex2.getMessage());
+                    ex2.printStackTrace();
+                }
+            } else {
+                e.printStackTrace();
+            }
         }
         return productList;
     }

@@ -79,6 +79,28 @@ public class ReportController {
 
     @FXML
     private void printZReport() {
+        // Açık masalar var mı kontrol et
+        try {
+            boolean hasOpen = orderDAO.hasOpenTables();
+            if (hasOpen) {
+                Alert warn = new Alert(Alert.AlertType.WARNING);
+                warn.setTitle("Uyarı");
+                warn.setHeaderText("Hesabı alınmamış masa(lar) var");
+                warn.setContentText("Lütfen önce tüm açık masaların hesaplarını kapatın.");
+                warn.showAndWait();
+                return;
+            }
+        } catch (Exception e) {
+            System.err.println("Açık masa kontrolü sırasında hata: " + e.getMessage());
+            e.printStackTrace();
+            Alert err = new Alert(Alert.AlertType.ERROR);
+            err.setTitle("Hata");
+            err.setHeaderText("Açık masa kontrolü yapılamadı");
+            err.setContentText("Açık masalar kontrol edilirken hata oluştu. İşleme devam edilmiyor.");
+            err.showAndWait();
+            return;
+        }
+
         // Allow creating Z report even if there are no sales (user wanted 0 TL report as well)
         // Onay al
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);

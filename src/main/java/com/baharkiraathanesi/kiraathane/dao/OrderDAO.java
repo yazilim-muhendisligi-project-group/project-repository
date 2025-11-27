@@ -1,7 +1,11 @@
 package com.baharkiraathanesi.kiraathane.dao;
 
 import com.baharkiraathanesi.kiraathane.database.DatabaseConnection;
+import com.baharkiraathanesi.kiraathane.database.DatabaseUpdater;
+import com.baharkiraathanesi.kiraathane.model.OrderItem;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OrderDAO {
 
@@ -139,10 +143,147 @@ public class OrderDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("❌ Bugünkü siparişler alınırken hata: " + e.getMessage());
-            e.printStackTrace();
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            System.err.println("❌ Bugünkü siparişler alınırken hata: " + msg);
+            // Eğer orders tablosu yoksa, veritabanı güncellemesini dene ve bir kez tekrar sorgula
+            if (msg.contains("doesn't exist") || msg.toLowerCase().contains("does not exist") || msg.toLowerCase().contains("unknown table")) {
+                System.err.println("❌ 'orders' tablosu bulunamadı - veritabanı güncellemesi çalıştırılıyor...");
+                try {
+                    DatabaseUpdater.updateDatabase();
+                } catch (Exception ex) {
+                    System.err.println("❌ Veritabanı güncellemesi başarısız: " + ex.getMessage());
+                }
+
+                // Tekrar dene
+                try (Connection conn2 = DatabaseConnection.getConnection();
+                     PreparedStatement stmt2 = conn2.prepareStatement(sql);
+                     ResultSet rs2 = stmt2.executeQuery()) {
+
+                    while (rs2.next()) {
+                        com.baharkiraathanesi.kiraathane.model.Order order = new com.baharkiraathanesi.kiraathane.model.Order();
+                        order.setId(rs2.getInt("id"));
+                        order.setTableName(rs2.getString("table_name"));
+                        order.setTotal(rs2.getDouble("total_amount"));
+
+                        Timestamp timestamp = rs2.getTimestamp("created_at");
+                        if (timestamp != null) {
+                            order.setOrderTime(timestamp.toLocalDateTime().toLocalTime().toString());
+                        }
+                        order.setPaymentType(rs2.getString("payment_type"));
+                        orders.add(order);
+                    }
+
+                } catch (SQLException ex2) {
+                    System.err.println("❌ Yeniden deneme sırasında hata: " + ex2.getMessage());
+                    ex2.printStackTrace();
+                }
+            } else {
+                e.printStackTrace();
+            }
         }
 
         return orders;
+    }
+
+    // Yeni metod: Açık (hesabı alınmamış) sipariş/masa var mı?
+    public boolean hasOpenTables() {
+        String sql = "SELECT COUNT(*) FROM orders WHERE is_paid = FALSE";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Yeni metod: Veritabanından bir masanın (açık) sipariş kalemlerini getir
+    public List<OrderItem> getOrderItemsForTable(int tableId) {
+        List<OrderItem> items = new ArrayList<>();
+        String sql = "SELECT oi.id as oi_id, p.name as product_name, oi.quantity, oi.price_at_order " +
+                     "FROM order_items oi " +
+                     "JOIN orders o ON oi.order_id = o.id " +
+                     "JOIN products p ON oi.product_id = p.id " +
+                     "WHERE o.table_id = ? AND o.is_paid = FALSE";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, tableId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("oi_id");
+                    String name = rs.getString("product_name");
+                    int qty = rs.getInt("quantity");
+                    double price = rs.getDouble("price_at_order");
+                    items.add(new OrderItem(id, name, qty, price));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return items;
+    }
+
+    // Yeni metod: Sipariş kalemini sil (UI'dan silme) -> toplamı ve stoğu güncelle
+    public boolean deleteOrderItem(int orderItemId) {
+        String selectSql = "SELECT order_id, product_id, quantity, price_at_order FROM order_items WHERE id = ?";
+        String deleteSql = "DELETE FROM order_items WHERE id = ?";
+        String updateOrderSql = "UPDATE orders SET total_amount = total_amount - ? WHERE id = ?";
+        String updateStockSql = "UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement selectStmt = conn.prepareStatement(selectSql)) {
+                selectStmt.setInt(1, orderItemId);
+                try (ResultSet rs = selectStmt.executeQuery()) {
+                    if (!rs.next()) {
+                        conn.rollback();
+                        return false; // Kalem bulunamadı
+                    }
+
+                    int orderId = rs.getInt("order_id");
+                    int productId = rs.getInt("product_id");
+                    int qty = rs.getInt("quantity");
+                    double price = rs.getDouble("price_at_order");
+
+                    // 1) Sipariş toplamını düş
+                    try (PreparedStatement updateOrderStmt = conn.prepareStatement(updateOrderSql)) {
+                        updateOrderStmt.setDouble(1, price * qty);
+                        updateOrderStmt.setInt(2, orderId);
+                        updateOrderStmt.executeUpdate();
+                    }
+
+                    // 2) Stoğu geri ekle
+                    try (PreparedStatement updateStockStmt = conn.prepareStatement(updateStockSql)) {
+                        updateStockStmt.setInt(1, qty);
+                        updateStockStmt.setInt(2, productId);
+                        updateStockStmt.executeUpdate();
+                    }
+
+                    // 3) Kalemi sil
+                    try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+                        deleteStmt.setInt(1, orderItemId);
+                        deleteStmt.executeUpdate();
+                    }
+
+                    conn.commit();
+                    return true;
+                }
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
