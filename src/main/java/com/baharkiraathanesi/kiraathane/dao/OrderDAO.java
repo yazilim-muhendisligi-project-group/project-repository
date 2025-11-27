@@ -214,7 +214,7 @@ public class OrderDAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("Sipariş detayları alınırken hata: " + e.getMessage());
+            System.out.println("❌ Sipariş detayları alınırken hata: " + e.getMessage());
             e.printStackTrace();
         }
 

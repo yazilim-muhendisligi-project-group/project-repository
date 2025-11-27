@@ -23,7 +23,9 @@ public class HelloApplication extends Application {
             FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource(fxml));
             Scene scene = new Scene(fxmlLoader.load(), 800, 600);
             primaryStage.setScene(scene);
+            primaryStage.centerOnScreen();
         } catch (IOException e) {
+            System.err.println("Sahne değiştirilemedi: " + fxml);
             e.printStackTrace();
         }
     }

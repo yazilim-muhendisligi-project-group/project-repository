@@ -37,26 +37,27 @@ public class LoginController {
         String username = usernameField.getText().trim();
         String password = passwordField.getText();
 
-        // Boş alan kontrolü
-        if (username.isEmpty() || password.isEmpty()) {
-            showAlert(AlertType.WARNING, "Uyarı", "Lütfen kullanıcı adı ve şifre giriniz!");
-            return;
-        }
-
-        // Veritabanı kontrolü
-        if (userDAO.authenticate(username, password)) {
-            System.out.println(" Giriş başarılı: " + username);
+        if (isLoginSuccessful(username, password)) {
+            System.out.println("✅ Giriş başarılı: " + username);
             HelloApplication.changeScene("main-menu.fxml");
         } else {
-            System.out.println(" Başarısız giriş denemesi: " + username);
+            System.out.println("❌ Başarısız giriş denemesi: " + username);
             showAlert(AlertType.ERROR, "Hata", "Kullanıcı adı veya şifre yanlış!");
             passwordField.clear();
         }
     }
 
-    /**
-     * Kullanıcıya uyarı mesajı gösterir
-     */
+    private boolean isLoginSuccessful(String username, String password) {
+        // Boş alan kontrolü
+        if (username.isEmpty() || password.isEmpty()) {
+            showAlert(AlertType.WARNING, "Uyarı", "Lütfen kullanıcı adı ve şifre giriniz!");
+            return false;
+        }
+
+        // Veritabanı kontrolü
+        return userDAO.authenticate(username, password);
+    }
+
     private void showAlert(AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);

@@ -12,16 +12,21 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.FlowPane;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class OrderController {
     @FXML private Label tableLabel;
     @FXML private FlowPane productsContainer;
-    @FXML private ListView<OrderItem> orderListView;
+    @FXML private ListView<String> orderListView;
     @FXML private Label totalLabel;
 
     private int currentTableId;
     private OrderDAO orderDAO = new OrderDAO();
     private ProductDAO productDAO = new ProductDAO();
+
+    // Sipariş kalemlerini String ile eşleştirmek için map
+    private Map<String, OrderItem> orderItemMap = new HashMap<>();
 
     // Masalar ekranından buraya gelince çağrılır
     public void setTableInfo(int tableId, String tableName) {
@@ -52,12 +57,16 @@ public class OrderController {
     // Masanın mevcut siparişlerini veritabanından yükle
     private void refreshOrderList() {
         orderListView.getItems().clear();
+        orderItemMap.clear();
 
         List<OrderItem> items = orderDAO.getOrderItems(currentTableId);
         double total = 0;
 
         for (OrderItem item : items) {
-            orderListView.getItems().add(item);
+            String displayText = item.getProductName() + " x" + item.getQuantity() +
+                               " - " + String.format("%.2f", item.getSubtotal()) + " TL";
+            orderListView.getItems().add(displayText);
+            orderItemMap.put(displayText, item);
             total += item.getSubtotal();
         }
 
@@ -96,12 +105,15 @@ public class OrderController {
 
     @FXML
     public void deleteSelectedItem() {
-        OrderItem selectedItem = orderListView.getSelectionModel().getSelectedItem();
-        if (selectedItem != null) {
-            // Veritabanından sil
-            orderDAO.removeOrderItem(selectedItem.getId(), selectedItem.getProductId(), selectedItem.getQuantity());
-            // Listeyi güncelle
-            refreshOrderList();
+        String selectedText = orderListView.getSelectionModel().getSelectedItem();
+        if (selectedText != null) {
+            OrderItem selectedItem = orderItemMap.get(selectedText);
+            if (selectedItem != null) {
+                // Veritabanından sil
+                orderDAO.removeOrderItem(selectedItem.getId(), selectedItem.getProductId(), selectedItem.getQuantity());
+                // Listeyi güncelle
+                refreshOrderList();
+            }
         } else {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Uyarı");
