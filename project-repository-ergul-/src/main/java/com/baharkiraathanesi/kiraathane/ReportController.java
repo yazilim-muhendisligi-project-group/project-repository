@@ -169,14 +169,14 @@ public class ReportController {
             contentStream.setFont(boldFont, 12);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
-            contentStream.showText("OZET BILGILER");
+            contentStream.showText("ÖZET BİLGİLER");
             contentStream.endText();
 
             yPosition -= 25;
             contentStream.setFont(normalFont, 11);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
-            contentStream.showText("Toplam Islem Sayisi: " + (currentOrders == null ? 0 : currentOrders.size()));
+            contentStream.showText("Toplam İşlem Sayısı: " + (currentOrders == null ? 0 : currentOrders.size()));
             contentStream.endText();
 
             yPosition -= 20;
@@ -196,7 +196,7 @@ public class ReportController {
             contentStream.setFont(boldFont, 12);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
-            contentStream.showText("SATIS DETAYLARI");
+            contentStream.showText("SATIŞ DETAYLARI");
             contentStream.endText();
 
             yPosition -= 20;
@@ -219,7 +219,7 @@ public class ReportController {
             contentStream.endText();
             contentStream.beginText();
             contentStream.newLineAtOffset(400, yPosition);
-            contentStream.showText("Odeme");
+            contentStream.showText("Ödeme");
             contentStream.endText();
 
             yPosition -= 15;

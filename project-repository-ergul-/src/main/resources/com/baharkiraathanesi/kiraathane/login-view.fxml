@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.baharkiraathanesi.kiraathane.LoginController" style="-fx-background-color: #f4f4f4;">
+    <HBox maxWidth="700" maxHeight="400" alignment="CENTER" style="-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 0);">
+        <VBox alignment="CENTER" minWidth="300" prefWidth="300" style="-fx-background-color: #B71C1C; -fx-background-radius: 10 0 0 10;">
+            <Label text="Bahar Kıraathanesi" textFill="WHITE" style="-fx-font-weight: bold; -fx-font-size: 30px; -fx-padding: 20 0 0 0;"/>
+            <StackPane>
+                <ImageView fitHeight="250" fitWidth="250" preserveRatio="true">
+                    <image>
+                        <Image url="@cay.png"/>
+                    </image>
+                </ImageView>
+            </StackPane>
+            <Label text="Dijital Dönüşüm Paneli" textFill="#ffcdd2" style="-fx-font-size: 12px;"/>
+        </VBox>
+
+        <VBox spacing="20" alignment="CENTER" HBox.hgrow="ALWAYS" style="-fx-padding: 40;">
+            <Label text="Hoş Geldiniz" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
+            <Label text="Lütfen bilgilerinizi giriniz" style="-fx-text-fill: #888;"/>
+            <TextField fx:id="usernameField" promptText="Kullanıcı Adı" style="-fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #ddd; -fx-border-radius: 5;"/>
+            <PasswordField fx:id="passwordField" promptText="Şifre" style="-fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #ddd; -fx-border-radius: 5;"/>
+            <Button text="GİRİŞ YAP" onAction="#onLoginButtonClick" defaultButton="true" maxWidth="Infinity" style="-fx-padding: 12; -fx-background-color: #B71C1C; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;"/>
+            <Label fx:id="errorLabel" text="" textFill="RED"/>
+        </VBox>
+    </HBox>
+</StackPane>

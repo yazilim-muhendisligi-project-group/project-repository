@@ -16,7 +16,7 @@ public class DatabaseConnection {
     private static final String DB_PASSWORD = getEnv("DB_PASSWORD", "selamveduaile");
 
     private static final String DB_URL = String.format(
-        "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8",
+        "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8",
         DB_HOST, DB_PORT, DB_NAME
     );
 

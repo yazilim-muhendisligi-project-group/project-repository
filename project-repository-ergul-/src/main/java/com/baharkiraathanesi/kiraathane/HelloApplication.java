@@ -3,6 +3,7 @@ package com.baharkiraathanesi.kiraathane;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import java.io.IOException;
 
@@ -14,7 +15,9 @@ public class HelloApplication extends Application {
     public void start(Stage stage) throws IOException {
         primaryStage = stage;
         changeScene("login-view.fxml");
-        stage.setTitle("Cafe Otomasyonu");
+        stage.setTitle("Kıraathane Otomasyonu");
+        Image appIcon = new Image(getClass().getResourceAsStream("/images/cay_icon.png"));
+        stage.getIcons().add(appIcon);
         stage.show();
     }
 
