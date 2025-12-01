@@ -13,30 +13,29 @@ public class TableDAO {
 
     public List<Table> getAllTables() {
         List<Table> tableList = new ArrayList<>();
-        final String SQL = "SELECT * FROM tables ORDER BY id";
+        // DEĞİŞİKLİK: Sadece is_deleted = 0 (FALSE) olanları getir
+        final String SQL = "SELECT * FROM tables WHERE is_deleted = FALSE ORDER BY id";
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(SQL)) {
 
             if (conn == null) {
-                LOGGER.info("TableDAO: Veritabanı bağlantısı kurulamadı!");
+                LOGGER.warning("TableDAO: Veritabanı bağlantısı kurulamadı!");
                 return tableList;
             }
 
             while (rs.next()) {
                 Table table = new Table(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getBoolean("is_occupied")
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getBoolean("is_occupied")
                 );
                 tableList.add(table);
             }
 
-            LOGGER.info(tableList.size() + " masa getirildi");
-
         } catch (SQLException e) {
-            LOGGER.info("Masalar getirilirken hata oluştu: " + e.getMessage());
+            LOGGER.severe("Masalar getirilirken hata oluştu: " + e.getMessage());
         }
 
         return tableList;
@@ -48,22 +47,16 @@ public class TableDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
-            if (conn == null) {
-                return false;
-            }
+            if (conn == null) return false;
 
             stmt.setBoolean(1, isOccupied);
             stmt.setInt(2, tableId);
 
             int affectedRows = stmt.executeUpdate();
-            if (affectedRows > 0) {
-                String status = isOccupied ? "DOLU" : "BOŞ";
-                LOGGER.info("Masa durumu güncellendi: ID=" + tableId + " -> " + status);
-                return true;
-            }
+            return affectedRows > 0;
 
         } catch (SQLException e) {
-            LOGGER.info("Masa durumu güncellenirken hata: ID=" + tableId + " - " + e.getMessage());
+            LOGGER.severe("Masa durumu güncellenirken hata: ID=" + tableId + " - " + e.getMessage());
         }
 
         return false;
@@ -71,18 +64,17 @@ public class TableDAO {
 
     public boolean addTable(String tableName) {
         if (tableName == null || tableName.trim().isEmpty()) {
-            LOGGER.info("Masa adı boş olamaz!");
+            LOGGER.warning("Masa adı boş olamaz!");
             return false;
         }
 
-        final String SQL = "INSERT INTO tables (name, is_occupied) VALUES (?, FALSE)";
+        // Yeni eklenen masa varsayılan olarak is_deleted = FALSE olur
+        final String SQL = "INSERT INTO tables (name, is_occupied, is_deleted) VALUES (?, FALSE, FALSE)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
-            if (conn == null) {
-                return false;
-            }
+            if (conn == null) return false;
 
             stmt.setString(1, tableName.trim());
             int affectedRows = stmt.executeUpdate();
@@ -93,32 +85,28 @@ public class TableDAO {
             }
 
         } catch (SQLException e) {
-            LOGGER.info("Masa eklenirken hata: " + tableName + " - " + e.getMessage());
+            LOGGER.severe("Masa eklenirken hata: " + tableName + " - " + e.getMessage());
         }
 
         return false;
     }
 
     public boolean deleteTable(int tableId) {
-        final String SQL = "DELETE FROM tables WHERE id = ?";
+        // DEĞİŞİKLİK: DELETE yerine UPDATE kullanıyoruz.
+        // Bu sayede masa veritabanında kalıyor (raporlar bozulmuyor) ama listelerde görünmüyor.
+        final String SQL = "UPDATE tables SET is_deleted = TRUE WHERE id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
-            if (conn == null) {
-                return false;
-            }
+            if (conn == null) return false;
 
             stmt.setInt(1, tableId);
             int affectedRows = stmt.executeUpdate();
-
-            if (affectedRows > 0) {
-                LOGGER.info("Masa silindi: ID=" + tableId);
-                return true;
-            }
+            return affectedRows > 0;
 
         } catch (SQLException e) {
-            LOGGER.info("Masa silinirken hata: ID=" + tableId + " - " + e.getMessage());
+            LOGGER.severe("Masa silinirken hata: ID=" + tableId + " - " + e.getMessage());
         }
 
         return false;

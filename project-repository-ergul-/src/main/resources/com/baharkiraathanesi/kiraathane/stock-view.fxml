@@ -36,8 +36,8 @@
 
     <bottom>
         <HBox alignment="CENTER_RIGHT" spacing="15" style="-fx-padding: 20;">
-            <Label text="• Seçili ürünü silmek için:" style="-fx-text-fill: gray;"/>
-            <Button text="🗑️ Seçili Ürünü Sil" onAction="#deleteSelectedProduct" style="-fx-background-color: #f44336; -fx-text-fill: white;"/>
+            <Label text="• Seçili ürünü silmek için:" style="-fx-font-size: 16px; -fx-text-fill: gray;"/>
+            <Button text="Seçili Ürünü Sil" onAction="#deleteSelectedProduct" style="-fx-background-color: #f44336; -fx-text-fill: white;"/>
         </HBox>
     </bottom>
 

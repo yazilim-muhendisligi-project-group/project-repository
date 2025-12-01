@@ -205,16 +205,16 @@ public class StockController {
                     if (success) {
                         int totalStock = stockPackage * portionsPerPackage;
                         LOGGER.info("✅ Yeni ürün eklendi: " + name + " (" + fullCategory + ") - "
-                                   + stockPackage + " paket × " + portionsPerPackage + " = " + totalStock + " " + unit);
+                                + stockPackage + " paket × " + portionsPerPackage + " = " + totalStock + " " + unit);
                         loadStockData();
 
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Başarılı");
                         alert.setContentText("Ürün başarıyla eklendi!\n\n"
-                                           + "Ürün: " + name + "\n"
-                                           + "Kategori: " + fullCategory + "\n"
-                                           + "Stok: " + stockPackage + " paket × " + portionsPerPackage
-                                           + " = " + totalStock + " " + unit);
+                                + "Ürün: " + name + "\n"
+                                + "Kategori: " + fullCategory + "\n"
+                                + "Stok: " + stockPackage + " paket × " + portionsPerPackage
+                                + " = " + totalStock + " " + unit);
                         alert.showAndWait();
                     }
                 } catch (NumberFormatException e) {
@@ -275,34 +275,48 @@ public class StockController {
         }
     }
 
+    // GÜNCELLENEN METOT: Stok güncellemesi artık PAKET üzerinden yapılıyor
     private void updateProductStock(Product product) {
-        TextInputDialog dialog = new TextInputDialog(String.valueOf(product.getStockQty()));
-        dialog.setTitle("Stok Güncelle");
-        dialog.setHeaderText(product.getName() + " için yeni stok miktarı");
-        dialog.setContentText("Yeni stok miktarı:");
+        // DİKKAT: Burada getStockPackage() kullanarak mevcut PAKET sayısını getiriyoruz
+        // (Eskiden getStockQty() idi, bu da toplam adedi getiriyordu, çarpma hatası oradan geliyordu)
+        TextInputDialog dialog = new TextInputDialog(String.valueOf(product.getStockPackage()));
+
+        dialog.setTitle("Paket Sayısı Güncelle");
+        dialog.setHeaderText(product.getName() + " - Stok Durumu");
+        // Kullanıcıya ne girmesi gerektiğini net bir şekilde söylüyoruz
+        dialog.setContentText("Mevcut Paket Sayısı:\n(Dikkat: Girdiğiniz sayı paket sayısı olarak işlenecektir!)");
 
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(newStock -> {
             try {
-                int stockAmount = Integer.parseInt(newStock.trim());
-                if (stockAmount < 0) {
-                    throw new IllegalArgumentException("Stok miktarı negatif olamaz!");
+                int stockPackageAmount = Integer.parseInt(newStock.trim());
+                if (stockPackageAmount < 0) {
+                    throw new IllegalArgumentException("Paket sayısı negatif olamaz!");
                 }
 
-                boolean success = productDAO.updateProductStock(product.getId(), stockAmount);
+                // Girilen PAKET sayısını veritabanına gönderiyoruz
+                // Veritabanı bunu (Paket Sayısı x Paket İçi Adet) olarak çarpıp kaydedecek.
+                boolean success = productDAO.updateProductStock(product.getId(), stockPackageAmount);
+
                 if (success) {
-                    System.out.println("✅ Stok güncellendi: " + product.getName() + " -> " + stockAmount);
+                    int totalUnits = stockPackageAmount * product.getPortionsPerPackage();
+                    System.out.println("✅ Stok güncellendi: " + stockPackageAmount + " paket (" + totalUnits + " adet)");
                     loadStockData();
 
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Başarılı");
-                    alert.setContentText("Stok başarıyla güncellendi!");
+                    alert.setHeaderText("Stok Güncellendi");
+                    alert.setContentText(
+                            "Yeni Stok Durumu:\n" +
+                                    stockPackageAmount + " Paket\n" +
+                                    "Toplam: " + totalUnits + " " + product.getUnit()
+                    );
                     alert.showAndWait();
                 }
             } catch (NumberFormatException e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Hata");
-                alert.setContentText("Geçerli bir sayı girin!");
+                alert.setContentText("Lütfen geçerli bir sayı girin!");
                 alert.showAndWait();
             } catch (Exception e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);

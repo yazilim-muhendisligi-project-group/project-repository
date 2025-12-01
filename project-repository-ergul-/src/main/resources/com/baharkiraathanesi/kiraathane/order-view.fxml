@@ -40,7 +40,7 @@
             </HBox>
 
             <VBox spacing="10">
-                <Button text="HESABI KAPAT (NAKİT/KART)" onAction="#closeCheck"
+                <Button text="HESABI KAPAT" onAction="#closeCheck"
                         maxWidth="Infinity" style="-fx-background-color: #FF5722; -fx-font-size: 16px; -fx-padding: 10;"/>
 
                 <HBox spacing="10">

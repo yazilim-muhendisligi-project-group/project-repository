@@ -3,7 +3,7 @@ package com.baharkiraathanesi.kiraathane;
 import com.baharkiraathanesi.kiraathane.dao.OrderDAO;
 import com.baharkiraathanesi.kiraathane.dao.ReportDAO;
 import com.baharkiraathanesi.kiraathane.model.Order;
-import com.baharkiraathanesi.kiraathane.model.Report; // Report modelini ekledik
+import com.baharkiraathanesi.kiraathane.model.Report;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,16 +15,17 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
-import javafx.scene.chart.AreaChart; // Grafik bileşenleri
-import javafx.scene.chart.BarChart;   // Grafik bileşenleri
-import javafx.scene.chart.XYChart;   // Grafik veri serileri
+import javafx.scene.chart.AreaChart;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.XYChart;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+// DÜZELTME: Standart fontlar yerine özel font yükleyicisi eklendi
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +36,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Locale; // Gün isimleri için
+import java.util.Locale;
 
 public class ReportController {
 
@@ -54,8 +55,6 @@ public class ReportController {
     @FXML
     private TableColumn<Order, Double> totalColumn;
 
-    @FXML
-    private TableColumn<Order, String> paymentTypeColumn;
 
     @FXML
     private Label totalRevenueLabel;
@@ -66,7 +65,6 @@ public class ReportController {
     @FXML
     private Label dateLabel;
 
-    // YENİ GRAFİK ALANLARI
     @FXML
     private AreaChart<String, Double> weeklyRevenueChart;
 
@@ -82,38 +80,33 @@ public class ReportController {
     public void initialize() {
         System.out.println("=== ReportController Başlatılıyor ===");
 
-        // Bugünün tarihini göster
         LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         dateLabel.setText("Tarih: " + today.format(formatter));
 
         Platform.runLater(this::loadReportData);
-        Platform.runLater(this::loadWeeklyChart); // Haftalık raporu yükle
-        Platform.runLater(this::loadMonthlyChart); // Aylık raporu yükle
+        Platform.runLater(this::loadWeeklyChart);
+        Platform.runLater(this::loadMonthlyChart);
     }
 
     @FXML
     private void printZReport() {
-        // Önce açık sipariş var mı kontrol et
         if (orderDAO.hasOpenOrders()) {
             Alert warningAlert = new Alert(Alert.AlertType.ERROR);
             warningAlert.setTitle("Z Raporu Alınamaz");
             warningAlert.setHeaderText("⚠️ Hesabı Kapatılmamış Masa Var!");
             warningAlert.setContentText("Z raporu alabilmek için önce tüm masaların hesaplarını kapatmanız gerekmektedir.\n\n" +
-                "Lütfen açık hesapları kontrol edip kapatın.");
+                    "Lütfen açık hesapları kontrol edip kapatın.");
             warningAlert.showAndWait();
             return;
         }
 
-        // Allow creating Z report even if there are no sales (user wanted 0 TL report as well)
-        // Onay al
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
         confirmAlert.setTitle("Z Raporu Onayı");
         confirmAlert.setHeaderText("Z Raporu almak istediğinize emin misiniz?");
 
         String content = "Toplam İşlem: " + (currentOrders == null ? 0 : currentOrders.size()) + "\n" +
-            "Toplam Ciro: " + String.format("%.2f TL", currentRevenue) + "\n\n" +
-            "️ Bu işlem geri alınamaz! Bugünkü veriler PDF'e kaydedilip sıfırlanacak.";
+                "Toplam Ciro: " + String.format("%.2f TL", currentRevenue) + "\n\n" + "Bu işlem geri alınamaz! Bugünkü veriler PDF'e kaydedilip sıfırlanacak.";
 
         confirmAlert.setContentText(content);
 
@@ -125,46 +118,50 @@ public class ReportController {
 
     private void generatePDFReport() {
         try {
-            // Dosya kaydetme dialogu
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Z Raporu Kaydet");
 
             LocalDateTime now = LocalDateTime.now();
             String defaultFileName = "Z_Raporu_" +
-                now.format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm")) + ".pdf";
+                    now.format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm")) + ".pdf";
 
             fileChooser.setInitialFileName(defaultFileName);
             fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("PDF Dosyası", "*.pdf")
+                    new FileChooser.ExtensionFilter("PDF Dosyası", "*.pdf")
             );
 
             File file = fileChooser.showSaveDialog(reportTable.getScene().getWindow());
             if (file == null) {
-                return; // Kullanıcı iptal etti
+                return;
             }
 
-            // PDF oluştur
             PDDocument document = new PDDocument();
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
 
             PDPageContentStream contentStream = new PDPageContentStream(document, page);
+            PDFont normalFont;
+            PDFont boldFont;
 
-            // Fontları önceden tanımla (sistem fontlarını taramayı önler)
-            PDType1Font boldFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
-            PDType1Font normalFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            try {
+                normalFont = PDType0Font.load(document, new File("C:/Windows/Fonts/arial.ttf"));
+                boldFont = PDType0Font.load(document, new File("C:/Windows/Fonts/arialbd.ttf"));
+            } catch (IOException e) {
+                System.err.println("Arial fontu yüklenemedi, standart font deneniyor (Türkçe karakter hatası verebilir!)");
+                throw new RuntimeException("Font yükleme hatası: C:/Windows/Fonts/arial.ttf bulunamadı.");
+            }
 
             // Başlık
             contentStream.setFont(boldFont, 18);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, 750);
-            contentStream.showText("BAHAR KIRAATHANESI");
+            contentStream.showText("BAHAR KIRAATHANESİ");
             contentStream.endText();
 
             contentStream.setFont(boldFont, 14);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, 730);
-            contentStream.showText("GUN SONU RAPORU (Z RAPORU)");
+            contentStream.showText("GÜN SONU RAPORU (Z RAPORU)");
             contentStream.endText();
 
             // Tarih ve saat
@@ -208,48 +205,48 @@ public class ReportController {
 
             // Satış detayları
             yPosition -= 25;
-            contentStream.setFont(boldFont, 12);
+            contentStream.setFont(boldFont, 14);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
             contentStream.showText("SATIŞ DETAYLARI");
             contentStream.endText();
 
-            yPosition -= 20;
-            contentStream.setFont(boldFont, 9);
+            // Sütun Başlıkları
+            yPosition -= 25;
+            contentStream.setFont(boldFont, 14);
+
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
             contentStream.showText("ID");
             contentStream.endText();
+
             contentStream.beginText();
             contentStream.newLineAtOffset(100, yPosition);
             contentStream.showText("Masa");
             contentStream.endText();
+
             contentStream.beginText();
-            contentStream.newLineAtOffset(200, yPosition);
+            contentStream.newLineAtOffset(250, yPosition);
             contentStream.showText("Saat");
             contentStream.endText();
-            contentStream.beginText();
-            contentStream.newLineAtOffset(300, yPosition);
-            contentStream.showText("Tutar");
-            contentStream.endText();
+
             contentStream.beginText();
             contentStream.newLineAtOffset(400, yPosition);
-            contentStream.showText("Ödeme");
+            contentStream.showText("Tutar");
             contentStream.endText();
 
-            yPosition -= 15;
-            contentStream.setFont(normalFont, 9);
+            yPosition -= 25;
+            contentStream.setFont(normalFont, 14);
 
             if (currentOrders != null) {
                 for (Order order : currentOrders) {
                     if (yPosition < 50) {
-                        // Yeni sayfa gerekiyor
                         contentStream.close();
                         page = new PDPage(PDRectangle.A4);
                         document.addPage(page);
                         contentStream = new PDPageContentStream(document, page);
                         yPosition = 750;
-                        contentStream.setFont(normalFont, 9);
+                        contentStream.setFont(normalFont, 14);
                     }
 
                     contentStream.beginText();
@@ -263,21 +260,16 @@ public class ReportController {
                     contentStream.endText();
 
                     contentStream.beginText();
-                    contentStream.newLineAtOffset(200, yPosition);
+                    contentStream.newLineAtOffset(250, yPosition);
                     contentStream.showText(order.getOrderTime());
                     contentStream.endText();
 
                     contentStream.beginText();
-                    contentStream.newLineAtOffset(300, yPosition);
+                    contentStream.newLineAtOffset(400, yPosition);
                     contentStream.showText(String.format("%.2f TL", order.getTotal()));
                     contentStream.endText();
 
-                    contentStream.beginText();
-                    contentStream.newLineAtOffset(400, yPosition);
-                    contentStream.showText(order.getPaymentType());
-                    contentStream.endText();
-
-                    yPosition -= 15;
+                    yPosition -= 25;
                 }
             }
 
@@ -285,9 +277,8 @@ public class ReportController {
             document.save(file);
             document.close();
 
-            System.out.println(" PDF başarıyla oluşturuldu: " + file.getAbsolutePath());
+            System.out.println("PDF başarıyla oluşturuldu: " + file.getAbsolutePath());
 
-            // Veritabanını sıfırla
             boolean resetSuccess = reportDAO.resetDailyData();
 
             if (resetSuccess) {
@@ -295,13 +286,12 @@ public class ReportController {
                 successAlert.setTitle("Başarılı");
                 successAlert.setHeaderText("Z Raporu Başarıyla Oluşturuldu!");
                 successAlert.setContentText(
-                    "PDF Kaydedildi: " + file.getName() + "\n\n" +
-                    "Bugünkü veriler sıfırlandı.\n" +
-                    "Yeni güne hazırsınız!"
+                        "PDF Kaydedildi: " + file.getName() + "\n\n" +
+                                "Bugünkü veriler sıfırlandı.\n" +
+                                "Yeni güne hazırsınız!"
                 );
                 successAlert.showAndWait();
 
-                // Ekranı yenile
                 loadReportData();
                 loadWeeklyChart();
                 loadMonthlyChart();
@@ -328,60 +318,41 @@ public class ReportController {
         try {
             System.out.println("Bugünün raporu yükleniyor...");
 
-            // Sütunları konfigüre et
             orderIdColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
             tableNameColumn.setCellValueFactory(new PropertyValueFactory<>("tableName"));
             timeColumn.setCellValueFactory(new PropertyValueFactory<>("orderTime"));
             totalColumn.setCellValueFactory(new PropertyValueFactory<>("total"));
-            paymentTypeColumn.setCellValueFactory(new PropertyValueFactory<>("paymentType"));
 
-            // Bugünün tamamlanmış siparişlerini çek
             List<Order> todayOrders = orderDAO.getTodayCompletedOrders();
 
-            currentOrders = todayOrders == null ? new ArrayList<>() : todayOrders; // Mevcut siparişleri güncelle
+            currentOrders = todayOrders == null ? new ArrayList<>() : todayOrders;
 
             if (todayOrders != null && !todayOrders.isEmpty()) {
-                System.out.println(" " + todayOrders.size() + " adet bugünkü işlem bulundu");
-
-                // Toplam ciro ve işlem sayısını hesapla
                 double totalRevenue = 0.0;
                 for (Order order : todayOrders) {
                     totalRevenue += order.getTotal();
                 }
-                currentRevenue = totalRevenue; // Mevcut ciroyu güncelle
+                currentRevenue = totalRevenue;
 
-                // ObservableList'e dönüştür
                 ObservableList<Order> orders = FXCollections.observableArrayList(todayOrders);
                 reportTable.setItems(orders);
 
-                // Özet bilgileri güncelle
                 totalRevenueLabel.setText(String.format("%.2f TL", totalRevenue));
                 totalOrdersLabel.setText(String.valueOf(todayOrders.size()));
-
-                System.out.println(" Toplam ciro: " + totalRevenue + " TL");
             } else {
-                System.out.println("⚠ Bugün hiç satış yapılmamış");
                 reportTable.setItems(FXCollections.observableArrayList());
                 totalRevenueLabel.setText("0.00 TL");
                 totalOrdersLabel.setText("0");
                 currentRevenue = 0.0;
             }
         } catch (Exception e) {
-            System.out.println(" ReportController Hatası: " + e.getMessage());
             e.printStackTrace();
-            reportTable.setItems(FXCollections.observableArrayList());
-            totalRevenueLabel.setText("0.00 TL");
-            totalOrdersLabel.setText("0");
-            currentOrders = new ArrayList<>();
-            currentRevenue = 0.0;
         }
     }
-    // YENİ METOT: Haftalık Ciro Grafiğini Yükle (AreaChart)
+
     private void loadWeeklyChart() {
         try {
             List<Report> weeklyReports = reportDAO.getWeeklyDailyReports();
-
-            // Eğer AreaChart boşsa veya null ise (FXML yüklenmemişse) işlemi atla
             if (weeklyRevenueChart == null) return;
 
             if (weeklyReports.isEmpty()) {
@@ -393,37 +364,28 @@ public class ReportController {
             XYChart.Series<String, Double> series = new XYChart.Series<>();
             series.setName("Günlük Ciro (TL)");
 
-            // Tarih formatı (örn: 25/11 Pzt)
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM");
-
-            // JavaFX grafikler için DayOfWeek'i Türkçe'ye çevirebiliriz.
             Locale trLocale = new Locale("tr", "TR");
 
             for (Report report : weeklyReports) {
-                // Gün ismini alıp kısaltma
                 DayOfWeek dayOfWeek = report.getDate().getDayOfWeek();
                 String dayName = dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, trLocale);
-
                 series.getData().add(new XYChart.Data<>(report.getDate().format(dateFormatter) + "\n" + dayName, report.getTotalRevenue()));
             }
 
             weeklyRevenueChart.getData().clear();
             weeklyRevenueChart.getData().add(series);
             weeklyRevenueChart.setTitle("Son 7 Günlük Ciro Raporu");
-
             weeklyRevenueChart.setLegendVisible(false);
             weeklyRevenueChart.setCreateSymbols(true);
         } catch (Exception e) {
-            System.err.println("Haftalık grafik yüklenirken hata oluştu: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    // YENİ METOT: Aylık Ciro Grafiğini Yükle (BarChart)
     private void loadMonthlyChart() {
         try {
             List<Report> monthlyReports = reportDAO.getMonthlyReports();
-
             if (monthlyRevenueChart == null) return;
 
             if (monthlyReports.isEmpty()) {
@@ -435,10 +397,8 @@ public class ReportController {
             XYChart.Series<String, Double> series = new XYChart.Series<>();
             series.setName("Aylık Toplam Ciro (TL)");
 
-            // Ay formatı (örn: Kas 2023)
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM yyyy", new Locale("tr", "TR"));
 
-            // Veriyi tersine çevirerek eskiden yeniye doğru sıralayalım.
             for (int i = monthlyReports.size() - 1; i >= 0; i--) {
                 Report report = monthlyReports.get(i);
                 series.getData().add(new XYChart.Data<>(report.getDate().format(formatter), report.getTotalRevenue()));
@@ -450,14 +410,12 @@ public class ReportController {
             monthlyRevenueChart.setLegendVisible(false);
 
         } catch (Exception e) {
-            System.err.println("Aylık grafik yüklenirken hata oluştu: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     @FXML
     public void goBackToMenu() {
-        System.out.println("Ana menüye gidiliyor...");
         HelloApplication.changeScene("main-menu.fxml");
     }
 }

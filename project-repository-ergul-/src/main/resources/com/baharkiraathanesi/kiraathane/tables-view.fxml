@@ -22,10 +22,19 @@
     </center>
 
     <bottom>
-        <HBox spacing="20" alignment="CENTER" style="-fx-padding: 10;">
-            <Label text="🟢 BOŞ" style="-fx-text-fill: green; -fx-font-weight: bold;"/>
-            <Label text="🔴 DOLU (Sipariş Var)" style="-fx-text-fill: red; -fx-font-weight: bold;"/>
-            <Label text="• Masaya sağ tıklayarak silebilirsiniz" style="-fx-text-fill: gray; -fx-font-size: 11px;"/>
+        <HBox spacing="30" alignment="CENTER" style="-fx-padding: 15; -fx-background-color: #f5f5f5; -fx-border-color: #ddd; -fx-border-width: 1 0 0 0;">
+            <!-- Mavi Kutu -->
+            <HBox spacing="10" alignment="CENTER">
+                <Label style="-fx-background-color: #2196F3; -fx-min-width: 20; -fx-min-height: 20; -fx-background-radius: 5;"/>
+                <Label text="BOŞ" style="-fx-font-weight: bold; -fx-text-fill: #333;"/>
+            </HBox>
+
+            <!-- Kırmızı Kutu -->
+            <HBox spacing="10" alignment="CENTER">
+                <Label style="-fx-background-color: #D32F2F; -fx-min-width: 20; -fx-min-height: 20; -fx-background-radius: 5;"/>
+                <Label text="DOLU" style="-fx-font-weight: bold; -fx-text-fill: #333;"/>
+            </HBox>
+            <Label text="• Masaya sağ tıklayarak silebilirsiniz" style="-fx-text-fill: gray; -fx-font-size: 16px;"/>
         </HBox>
     </bottom>
 </BorderPane>

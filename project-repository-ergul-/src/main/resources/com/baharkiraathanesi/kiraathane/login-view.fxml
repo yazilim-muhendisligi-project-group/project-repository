@@ -20,15 +20,15 @@
                     </image>
                 </ImageView>
             </StackPane>
-            <Label text="Dijital Dönüşüm Paneli" textFill="#ffcdd2" style="-fx-font-size: 12px;"/>
+            <Label text="Dijital Dönüşüm Paneli" textFill="#ffcdd2" style="-fx-font-size: 18px;"/>
         </VBox>
 
         <VBox spacing="20" alignment="CENTER" HBox.hgrow="ALWAYS" style="-fx-padding: 40;">
-            <Label text="Hoş Geldiniz" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
-            <Label text="Lütfen bilgilerinizi giriniz" style="-fx-text-fill: #888;"/>
+            <Label text="Hoş Geldiniz" style="-fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
+            <Label text="Lütfen bilgilerinizi giriniz" style="-fx-font-size: 20px; -fx-text-fill: #888;"/>
             <TextField fx:id="usernameField" promptText="Kullanıcı Adı" style="-fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #ddd; -fx-border-radius: 5;"/>
             <PasswordField fx:id="passwordField" promptText="Şifre" style="-fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #ddd; -fx-border-radius: 5;"/>
-            <Button text="GİRİŞ YAP" onAction="#onLoginButtonClick" defaultButton="true" maxWidth="Infinity" style="-fx-padding: 12; -fx-background-color: #B71C1C; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;"/>
+            <Button text="GİRİŞ YAP" onAction="#onLoginButtonClick" defaultButton="true" maxWidth="Infinity" style="-fx-padding: 12; -fx-background-color: #B71C1C; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;-fx-font-size: 20px;"/>
             <Label fx:id="errorLabel" text="" textFill="RED"/>
         </VBox>
     </HBox>

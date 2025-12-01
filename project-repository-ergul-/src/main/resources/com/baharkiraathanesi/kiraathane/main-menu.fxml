@@ -5,14 +5,13 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.effect.*?>
 
-<StackPane stylesheets="@styles.css" xmlns:fx="http://javafx.com/fxml"
-           fx:controller="com.baharkiraathanesi.kiraathane.MainMenuController">
+<StackPane stylesheets="@styles.css" xmlns:fx="http://javafx.com/fxml" fx:controller="com.baharkiraathanesi.kiraathane.MainMenuController">
 
     <VBox alignment="CENTER" spacing="50">
-        <Label text="Ana Menü" styleClass="header-label"/>
+        <Label text="Ana Menü" styleClass="header-label" style="-fx-font-size: 24px"/>
 
         <HBox alignment="CENTER" spacing="80">
-            <VBox alignment="CENTER" spacing="15" onMouseClicked="#goToStock"  styleClass="menu-card">
+            <VBox alignment="CENTER" spacing="15" onMouseClicked="#goToStock" style="-fx-cursor: hand;" styleClass="menu-card">
                 <StackPane>
                     <Circle radius="80" fill="#2196F3" stroke="WHITE" strokeWidth="4">
                         <effect>
@@ -21,7 +20,7 @@
                     </Circle>
                     <Label text="📦" style="-fx-font-size: 50px; -fx-text-fill: white;"/>
                 </StackPane>
-                <Label text="Stok Yönetimi" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+                <Label text="Stok Yönetimi" style="-fx-font-weight: bold; -fx-font-size: 20px;"/>
             </VBox>
 
             <VBox alignment="CENTER" spacing="15" onMouseClicked="#goToTables" style="-fx-cursor: hand;" styleClass="menu-card">
@@ -31,9 +30,9 @@
                             <DropShadow color="#00000044" radius="15" offsetY="5"/>
                         </effect>
                     </Circle>
-                    <Label text="🍽️" style="-fx-font-size: 50px; -fx-text-fill: white;"/>
+                    <Label text="🍽" style="-fx-font-size: 70px; -fx-text-fill: white;"/>
                 </StackPane>
-                <Label text="Masalar" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+                <Label text="Masalar" style="-fx-font-weight: bold; -fx-font-size: 20px;"/>
             </VBox>
 
             <VBox alignment="CENTER" spacing="15" onMouseClicked="#goToReport" style="-fx-cursor: hand;" styleClass="menu-card">
@@ -45,7 +44,7 @@
                     </Circle>
                     <Label text="📊" style="-fx-font-size: 50px; -fx-text-fill: white;"/>
                 </StackPane>
-                <Label text="Z Raporu" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+                <Label text="Z Raporu" style="-fx-font-weight: bold; -fx-font-size: 20px;"/>
             </VBox>
         </HBox>
     </VBox>

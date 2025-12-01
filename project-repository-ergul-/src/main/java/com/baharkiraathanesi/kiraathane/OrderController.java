@@ -5,11 +5,13 @@ import com.baharkiraathanesi.kiraathane.dao.ProductDAO;
 import com.baharkiraathanesi.kiraathane.model.Product;
 import com.baharkiraathanesi.kiraathane.model.OrderItem;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.text.TextAlignment;
 
 import java.util.List;
 import java.util.HashMap;
@@ -34,21 +36,59 @@ public class OrderController {
         this.tableLabel.setText(tableName + " Sipariş Ekranı");
 
         loadProducts();
-        refreshOrderList(); // Var olan siparişleri veritabanından yükle
+        refreshOrderList();
     }
 
     private void loadProducts() {
         productsContainer.getChildren().clear();
         List<Product> products = productDAO.getAllProducts();
         for (Product p : products) {
-            Button btn = new Button(p.getName() + "\n" + p.getPrice() + " TL");
-            btn.setPrefSize(100, 60);
+            // --- STOK KONTROLÜ ---
+            boolean isOutOfStock = p.getStockQty() <= 0;
 
-            // Ürüne tıklayınca siparişe ekle
-            btn.setOnAction(e -> {
-                orderDAO.addProductToOrder(currentTableId, p.getId(), 1);
-                refreshOrderList(); // Listeyi güncelle
-            });
+            String btnText = p.getName() + "\n" + p.getPrice() + " TL";
+            if (isOutOfStock) {
+                btnText = p.getName() + "\n(TÜKENDİ)";
+            }
+
+            Button btn = new Button(btnText);
+            btn.setPrefSize(120, 80);
+
+            btn.setTextAlignment(TextAlignment.CENTER);
+            btn.setAlignment(Pos.CENTER);
+            btn.setWrapText(true);
+
+            // Eğer stok bittiyse butonu pasif yap ve grileştir
+            if (isOutOfStock) {
+                btn.setDisable(true);
+                btn.setStyle("-fx-background-color: #333333; -fx-text-fill: #ffffff; -fx-background-radius: 8; -fx-font-weight: bold;");
+            } else {
+                // Stok varsa normal görünüm
+                btn.setStyle("-fx-background-radius: 8; -fx-cursor: hand;");
+
+                btn.setOnAction(e -> {
+                    // Veritabanı kontrolü ile ekleme yap (Çünkü o an başka masa son ürünü almış olabilir)
+                    boolean success = orderDAO.addProductToOrder(currentTableId, p.getId(), 1);
+
+                    if (success) {
+                        refreshOrderList();
+                        // Eğer bu işlemle stok bittiyse (son ürünü aldıysak) ekranı yenile ki buton pasif olsun
+                        if (p.getStockQty() - 1 <= 0) {
+                            loadProducts();
+                        }
+                    } else {
+                        // Stok yetersizse (başka masa bizden önce almışsa) uyarı ver
+                        Alert alert = new Alert(Alert.AlertType.WARNING);
+                        alert.setTitle("Stok Yetersiz");
+                        alert.setHeaderText(null);
+                        alert.setContentText(p.getName() + " tükenmiştir!");
+                        alert.showAndWait();
+
+                        // Ekranı yenile (Buton pasif olsun)
+                        loadProducts();
+                    }
+                });
+            }
 
             productsContainer.getChildren().add(btn);
         }
@@ -64,7 +104,7 @@ public class OrderController {
 
         for (OrderItem item : items) {
             String displayText = item.getProductName() + " x" + item.getQuantity() +
-                               " - " + String.format("%.2f", item.getSubtotal()) + " TL";
+                    " - " + String.format("%.2f", item.getSubtotal()) + " TL";
             orderListView.getItems().add(displayText);
             orderItemMap.put(displayText, item);
             total += item.getSubtotal();
@@ -113,6 +153,8 @@ public class OrderController {
                 orderDAO.removeOrderItem(selectedItem.getId(), selectedItem.getProductId(), selectedItem.getQuantity());
                 // Listeyi güncelle
                 refreshOrderList();
+                // Ürün silinince stok geri geleceği için butonları yenile (Gri olan açılabilir)
+                loadProducts();
             }
         } else {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -142,6 +184,8 @@ public class OrderController {
         }
 
         refreshOrderList();
+        // Stoklar geri geldiği için butonları yenile
+        loadProducts();
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Bilgi");
