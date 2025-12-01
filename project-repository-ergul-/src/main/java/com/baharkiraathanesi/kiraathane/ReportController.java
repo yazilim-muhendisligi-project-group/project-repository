@@ -3,6 +3,7 @@ package com.baharkiraathanesi.kiraathane;
 import com.baharkiraathanesi.kiraathane.dao.OrderDAO;
 import com.baharkiraathanesi.kiraathane.dao.ReportDAO;
 import com.baharkiraathanesi.kiraathane.model.Order;
+import com.baharkiraathanesi.kiraathane.model.Report; // Report modelini ekledik
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,6 +15,9 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
+import javafx.scene.chart.AreaChart; // Grafik bileşenleri
+import javafx.scene.chart.BarChart;   // Grafik bileşenleri
+import javafx.scene.chart.XYChart;   // Grafik veri serileri
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -24,12 +28,14 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Locale; // Gün isimleri için
 
 public class ReportController {
 
@@ -60,6 +66,13 @@ public class ReportController {
     @FXML
     private Label dateLabel;
 
+    // YENİ GRAFİK ALANLARI
+    @FXML
+    private AreaChart<String, Double> weeklyRevenueChart;
+
+    @FXML
+    private BarChart<String, Double> monthlyRevenueChart;
+
     private final OrderDAO orderDAO = new OrderDAO();
     private final ReportDAO reportDAO = new ReportDAO();
     private List<Order> currentOrders = new ArrayList<>();
@@ -75,6 +88,8 @@ public class ReportController {
         dateLabel.setText("Tarih: " + today.format(formatter));
 
         Platform.runLater(this::loadReportData);
+        Platform.runLater(this::loadWeeklyChart); // Haftalık raporu yükle
+        Platform.runLater(this::loadMonthlyChart); // Aylık raporu yükle
     }
 
     @FXML
@@ -288,6 +303,8 @@ public class ReportController {
 
                 // Ekranı yenile
                 loadReportData();
+                loadWeeklyChart();
+                loadMonthlyChart();
             } else {
                 Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                 errorAlert.setTitle("Hata");
@@ -357,6 +374,84 @@ public class ReportController {
             totalOrdersLabel.setText("0");
             currentOrders = new ArrayList<>();
             currentRevenue = 0.0;
+        }
+    }
+    // YENİ METOT: Haftalık Ciro Grafiğini Yükle (AreaChart)
+    private void loadWeeklyChart() {
+        try {
+            List<Report> weeklyReports = reportDAO.getWeeklyDailyReports();
+
+            // Eğer AreaChart boşsa veya null ise (FXML yüklenmemişse) işlemi atla
+            if (weeklyRevenueChart == null) return;
+
+            if (weeklyReports.isEmpty()) {
+                weeklyRevenueChart.setTitle("Son 7 Günlük Ciro Raporu (Veri Yok)");
+                weeklyRevenueChart.getData().clear();
+                return;
+            }
+
+            XYChart.Series<String, Double> series = new XYChart.Series<>();
+            series.setName("Günlük Ciro (TL)");
+
+            // Tarih formatı (örn: 25/11 Pzt)
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM");
+
+            // JavaFX grafikler için DayOfWeek'i Türkçe'ye çevirebiliriz.
+            Locale trLocale = new Locale("tr", "TR");
+
+            for (Report report : weeklyReports) {
+                // Gün ismini alıp kısaltma
+                DayOfWeek dayOfWeek = report.getDate().getDayOfWeek();
+                String dayName = dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, trLocale);
+
+                series.getData().add(new XYChart.Data<>(report.getDate().format(dateFormatter) + "\n" + dayName, report.getTotalRevenue()));
+            }
+
+            weeklyRevenueChart.getData().clear();
+            weeklyRevenueChart.getData().add(series);
+            weeklyRevenueChart.setTitle("Son 7 Günlük Ciro Raporu");
+
+            weeklyRevenueChart.setLegendVisible(false);
+            weeklyRevenueChart.setCreateSymbols(true);
+        } catch (Exception e) {
+            System.err.println("Haftalık grafik yüklenirken hata oluştu: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // YENİ METOT: Aylık Ciro Grafiğini Yükle (BarChart)
+    private void loadMonthlyChart() {
+        try {
+            List<Report> monthlyReports = reportDAO.getMonthlyReports();
+
+            if (monthlyRevenueChart == null) return;
+
+            if (monthlyReports.isEmpty()) {
+                monthlyRevenueChart.setTitle("Aylık Ciro Raporu (Veri Yok)");
+                monthlyRevenueChart.getData().clear();
+                return;
+            }
+
+            XYChart.Series<String, Double> series = new XYChart.Series<>();
+            series.setName("Aylık Toplam Ciro (TL)");
+
+            // Ay formatı (örn: Kas 2023)
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM yyyy", new Locale("tr", "TR"));
+
+            // Veriyi tersine çevirerek eskiden yeniye doğru sıralayalım.
+            for (int i = monthlyReports.size() - 1; i >= 0; i--) {
+                Report report = monthlyReports.get(i);
+                series.getData().add(new XYChart.Data<>(report.getDate().format(formatter), report.getTotalRevenue()));
+            }
+
+            monthlyRevenueChart.getData().clear();
+            monthlyRevenueChart.getData().add(series);
+            monthlyRevenueChart.setTitle("Aylık Ciro Dağılımı");
+            monthlyRevenueChart.setLegendVisible(false);
+
+        } catch (Exception e) {
+            System.err.println("Aylık grafik yüklenirken hata oluştu: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

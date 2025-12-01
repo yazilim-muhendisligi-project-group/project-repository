@@ -43,6 +43,58 @@ public class ReportDAO {
         }
         return totalRevenue;
     }
+    // Haftalık Rapor (Son 7 Günlük Günlük Ciro)
+    public List<Report> getWeeklyDailyReports() {
+        List<Report> reports = new ArrayList<>();
+        // Son 7 güne ait ödenmiş siparişlerin günlük toplam cirosunu ve sipariş sayısını getir
+        String sql = "SELECT DATE(created_at) AS report_date, SUM(total_amount) AS total_revenue, COUNT(*) AS total_orders " +
+                "FROM orders WHERE is_paid = TRUE AND created_at >= CURDATE() - INTERVAL 7 DAY " +
+                "GROUP BY DATE(created_at) ORDER BY report_date ASC";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                LocalDate date = rs.getDate("report_date").toLocalDate();
+                double totalRevenue = rs.getDouble("total_revenue");
+                int totalOrders = rs.getInt("total_orders");
+                reports.add(new Report(date, totalRevenue, totalOrders));
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Haftalık raporlar alınırken hata: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return reports;
+    }
+    // Aylık Rapor (Aylık Toplam Ciro)
+    public List<Report> getMonthlyReports() {
+        List<Report> reports = new ArrayList<>();
+        // Ödenmiş siparişlerin aylık toplam cirosunu ve sipariş sayısını getir (Son 12 ayı getirmek daha mantıklı olabilir, ancak şimdilik tüm ayları getiriyoruz.)
+        String sql = "SELECT DATE_FORMAT(created_at, '%Y-%m-01') AS report_date, SUM(total_amount) AS total_revenue, COUNT(*) AS total_orders " +
+                "FROM orders WHERE is_paid = TRUE " +
+                "GROUP BY DATE_FORMAT(created_at, '%Y-%m') " +
+                "ORDER BY report_date DESC";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                // MySQL DATE_FORMAT ile gelen YYYY-MM-01 formatını LocalDate'e çevir
+                LocalDate date = rs.getDate("report_date").toLocalDate();
+                double totalRevenue = rs.getDouble("total_revenue");
+                int totalOrders = rs.getInt("total_orders");
+                reports.add(new Report(date, totalRevenue, totalOrders));
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Aylık raporlar alınırken hata: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return reports;
+    }
 
     public List<Report> getAllReports() {
         List<Report> reports = new ArrayList<>();

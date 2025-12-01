@@ -12,7 +12,7 @@
         <Label text="Ana Menü" styleClass="header-label"/>
 
         <HBox alignment="CENTER" spacing="80">
-            <VBox alignment="CENTER" spacing="15" onMouseClicked="#goToStock" style="-fx-cursor: hand;" styleClass="menu-card">
+            <VBox alignment="CENTER" spacing="15" onMouseClicked="#goToStock"  styleClass="menu-card">
                 <StackPane>
                     <Circle radius="80" fill="#2196F3" stroke="WHITE" strokeWidth="4">
                         <effect>
