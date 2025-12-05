@@ -185,12 +185,6 @@ public class ProductDAO {
         return false;
     }
 
-    /**
-     * ID'ye göre ürün getirir
-     *
-     * @param productId Ürün ID
-     * @return Ürün nesnesi, bulunamazsa null
-     */
     public Product getProductById(int productId) {
         final String SQL = "SELECT * FROM products WHERE id = ?";
 

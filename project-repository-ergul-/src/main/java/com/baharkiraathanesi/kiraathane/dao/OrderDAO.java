@@ -234,7 +234,6 @@ public class OrderDAO {
         return items;
     }
 
-    // GÜNCELLENEN METOT: Ürün silindikten sonra masa boşaldı mı kontrol eder
     public void removeOrderItem(int orderItemId, int productId, int quantity) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             String infoSql = "SELECT order_id, price_at_order FROM order_items WHERE id = ?";
@@ -249,13 +248,11 @@ public class OrderDAO {
                 priceAtOrder = rs.getDouble("price_at_order");
             }
 
-            // 1. Ürünü Sil
             String deleteSql = "DELETE FROM order_items WHERE id = ?";
             PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
             deleteStmt.setInt(1, orderItemId);
             deleteStmt.executeUpdate();
 
-            // 2. Sipariş Tutarını Güncelle
             if (orderId > 0) {
                 String totalSql = "UPDATE orders SET total_amount = total_amount - ? WHERE id = ?";
                 PreparedStatement totalStmt = conn.prepareStatement(totalSql);
@@ -264,15 +261,12 @@ public class OrderDAO {
                 totalStmt.executeUpdate();
             }
 
-            // 3. Stoğu Geri İade Et
             String stockSql = "UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?";
             PreparedStatement stockStmt = conn.prepareStatement(stockSql);
             stockStmt.setInt(1, quantity);
             stockStmt.setInt(2, productId);
             stockStmt.executeUpdate();
 
-            // --- YENİ EKLENEN KISIM ---
-            // 4. Siparişte başka ürün kaldı mı kontrol et
             if (orderId > 0) {
                 String countSql = "SELECT COUNT(*) FROM order_items WHERE order_id = ?";
                 PreparedStatement countStmt = conn.prepareStatement(countSql);
@@ -280,9 +274,7 @@ public class OrderDAO {
                 ResultSet countRs = countStmt.executeQuery();
 
                 if (countRs.next() && countRs.getInt(1) == 0) {
-                    // Eğer ürün kalmadıysa:
 
-                    // A) Masanın ID'sini bul
                     String tableSql = "SELECT table_id FROM orders WHERE id = ?";
                     PreparedStatement tableStmt = conn.prepareStatement(tableSql);
                     tableStmt.setInt(1, orderId);
@@ -293,23 +285,20 @@ public class OrderDAO {
                         tableId = tableRs.getInt("table_id");
                     }
 
-                    // B) Siparişi tamamen sil (Boş sipariş tutmayalım)
                     String deleteOrderSql = "DELETE FROM orders WHERE id = ?";
                     PreparedStatement deleteOrderStmt = conn.prepareStatement(deleteOrderSql);
                     deleteOrderStmt.setInt(1, orderId);
                     deleteOrderStmt.executeUpdate();
 
-                    // C) Masayı BOŞ yap
                     if (tableId != -1) {
                         String updateTableSql = "UPDATE tables SET is_occupied = FALSE WHERE id = ?";
                         PreparedStatement updateTableStmt = conn.prepareStatement(updateTableSql);
                         updateTableStmt.setInt(1, tableId);
                         updateTableStmt.executeUpdate();
-                        System.out.println("✅ Sipariş boşaldığı için Masa " + tableId + " boşa çıkarıldı.");
+                        System.out.println("Sipariş boşaldığı için Masa " + tableId + " boşa çıkarıldı.");
                     }
                 }
             }
-            // ---------------------------
 
         } catch (SQLException e) {
             System.out.println("Sipariş kalemi silinirken hata: " + e.getMessage());

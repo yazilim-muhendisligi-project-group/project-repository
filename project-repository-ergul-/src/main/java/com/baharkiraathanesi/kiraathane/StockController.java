@@ -331,31 +331,27 @@ public class StockController {
         try {
             LOGGER.info("Stok verileri yükleniyor...");
 
-            // Sütunları konfigür et
             productNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
             categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
             stockQuantityColumn.setCellValueFactory(new PropertyValueFactory<>("stockQty"));
             unitColumn.setCellValueFactory(new PropertyValueFactory<>("unit"));
             priceColumn.setCellValueFactory(new PropertyValueFactory<>("price"));
 
-            // Veritabanından ürünleri çek
             List<Product> productList = productDAO.getAllProducts();
 
             if (productList != null) {
-                LOGGER.info("✅ " + productList.size() + " ürün bulundu");
+                LOGGER.info(productList.size() + " ürün bulundu");
 
-                // ObservableList'e dönüştür
                 ObservableList<Product> products = FXCollections.observableArrayList(productList);
 
-                // Tabloya ekle
                 stockTable.setItems(products);
-                LOGGER.info("✅ Stok tablosu başarıyla dolduruldu!");
+                LOGGER.info("Stok tablosu başarıyla dolduruldu!");
             } else {
-                LOGGER.info("⚠️ Ürün listesi NULL!");
+                LOGGER.info("Ürün listesi NULL!");
                 stockTable.setItems(FXCollections.observableArrayList());
             }
         } catch (Exception e) {
-            LOGGER.info("❌ StockController Hatası: " + e.getMessage());
+            LOGGER.info("StockController Hatası: " + e.getMessage());
         }
     }
 

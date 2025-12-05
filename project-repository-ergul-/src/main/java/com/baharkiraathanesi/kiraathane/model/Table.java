@@ -11,18 +11,16 @@ public class Table {
         this.isOccupied = isOccupied;
     }
 
-    // Getter Metotları
     public int getId() { return id; }
     public String getName() { return name; }
     public boolean isOccupied() { return isOccupied; }
 
-    // Masa durumunu değiştirmek için (Sipariş girilince dolu olacak)
     public void setOccupied(boolean occupied) {
         isOccupied = occupied;
     }
 
     @Override
     public String toString() {
-        return name + " [" + (isOccupied ? "DOLU 🔴" : "BOŞ 🟢") + "]";
+        return name + " [" + (isOccupied ? "DOLU" : "BOŞ") + "]";
     }
 }

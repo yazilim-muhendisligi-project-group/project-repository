@@ -1,207 +1,350 @@
-# Bahar Kıraathanesi Yönetim Sistemi
+# ☕ Bahar Kıraathanesi - Cafe & Tea House Management System
 
-## 📋 Genel Bakış
-JavaFX tabanlı profesyonel kıraathane yönetim sistemi. MySQL veritabanı ile entegre çalışır.
+<p align="center">
+  <img src="src/main/resources/images/cay_icon.png" alt="Bahar Kıraathanesi Logo" width="120"/>
+</p>
 
-## 🔐 Giriş Bilgileri
+<p align="center">
+  <strong>Modern, kullanımı kolay kıraathane ve kafe yönetim sistemi</strong>
+</p>
 
-Uygulama artık **SQL tabanlı** kullanıcı doğrulama kullanıyor. Kod içinde sabit kullanıcı adı/şifre yok!
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk" alt="Java 21"/>
+  <img src="https://img.shields.io/badge/JavaFX-21-blue?style=flat-square" alt="JavaFX 21"/>
+  <img src="https://img.shields.io/badge/MySQL-8.x-blue?style=flat-square&logo=mysql&logoColor=white" alt="MySQL"/>
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
+</p>
 
-### Varsayılan Kullanıcılar:
-- **Kullanıcı:** `yonetici` | **Şifre:** `1234`
-- **Kullanıcı:** `admin` | **Şifre:** `admin123`
+---
 
-Yeni kullanıcı eklemek için:
-```sql
-INSERT INTO users (username, password, role) VALUES ('yeni_kullanici', 'sifre123', 'admin');
+## 📋 İçindekiler
+
+- [✨ Özellikler](#-özellikler)
+- [🖥️ Ekran Görüntüleri](#️-ekran-görüntüleri)
+- [🚀 Kurulum](#-kurulum)
+- [📖 Kullanım Kılavuzu](#-kullanım-kılavuzu)
+- [🔧 Sorun Giderme](#-sorun-giderme)
+- [📞 Destek](#-destek)
+
+---
+
+## ✨ Özellikler
+
+| Özellik | Açıklama |
+|---------|----------|
+| 🔐 **Güvenli Giriş** | SQL tabanlı kullanıcı doğrulama sistemi |
+| 🪑 **Masa Yönetimi** | Masaları ekleyin, silin ve durumlarını takip edin |
+| 🛒 **Sipariş Takibi** | Kolay ve hızlı sipariş alma arayüzü |
+| 📦 **Stok Kontrolü** | Ürün ve envanter yönetimi |
+| 📊 **Raporlama** | Günlük, haftalık ve aylık satış raporları |
+| 🧾 **Z Raporu** | PDF formatında gün sonu raporu oluşturma |
+
+---
+
+## 🖥️ Ne Yapar Bu Uygulama?
+
+Bu uygulama, kafe, kıraathane ve benzeri işletmeler için tasarlanmış bir **satış noktası (POS) sistemidir**.
+
 ```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   👤 Giriş Yap  →  🏠 Ana Menü  →  📋 İşlem Seç            │
+│                                                             │
+│   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│   │   📦 Stok   │  │  🪑 Masalar │  │  📊 Rapor   │        │
+│   └─────────────┘  └─────────────┘  └─────────────┘        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
 
 ## 🚀 Kurulum
 
-### 1. Veritabanını Kur
+### 📋 Gereksinimler
+
+| Gereksinim | Minimum Versiyon |
+|------------|------------------|
+| ☕ Java | 21 veya üzeri |
+| 🐬 MySQL | 8.0 veya üzeri |
+| 💻 İşletim Sistemi | Windows / macOS / Linux |
+
+---
+
+### 1️⃣ Java Kurulumu
+
+<details>
+<summary>🍎 <strong>macOS</strong> (tıklayın)</summary>
+
 ```bash
-/usr/local/mysql/bin/mysql -u root -p < setup_database.sql
+# Homebrew ile kurulum
+brew install openjdk@21
+
+# Homebrew yoksa önce onu kurun:
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Bu komut:
-- ✅ `bahar_db` veritabanını oluşturur
-- ✅ Tüm tabloları (users, products, tables, orders) oluşturur
-- ✅ 15 masa ekler
-- ✅ 12 başlangıç ürünü ekler
-- ✅ Varsayılan kullanıcıları ekler
+</details>
 
-### 2. MySQL Bağlantı Ayarları
+<details>
+<summary>🪟 <strong>Windows</strong> (tıklayın)</summary>
 
-Dosya: `DatabaseConnection.java`
+1. 🌐 [Adoptium](https://adoptium.net/) sitesine gidin
+2. 📥 **"Latest LTS Release"** butonuna tıklayın
+3. 📦 `.msi` dosyasını indirin
+4. 🖱️ Çift tıklayıp kurulum sihirbazını takip edin
 
-**Varsayılan Ayarlar:**
-- Host: `localhost`
-- Port: `3306`
-- Database: `bahar_db`
-- User: `root`
-- Password: `selamveduaile`
+</details>
 
-**Özelleştirme (Environment Variables):**
+<details>
+<summary>🐧 <strong>Linux</strong> (tıklayın)</summary>
+
 ```bash
-export DB_HOST=localhost
-export DB_PORT=3306
-export DB_NAME=bahar_db
-export DB_USER=root
-export DB_PASSWORD=your_password
+sudo apt update
+sudo apt install openjdk-21-jdk
 ```
 
-### 3. Uygulamayı Çalıştır
+</details>
+
+#### ✅ Kurulum Kontrolü
+
 ```bash
-mvn clean javafx:run
+java -version
+# Çıktı: openjdk version "21.0.x" ...
 ```
 
-## 🏗️ Proje Yapısı (Profesyonel Mimari)
+---
 
-```
-src/main/java/
-├── com.baharkiraathanesi.kiraathane/
-│   ├── dao/                    # Data Access Objects
-│   │   ├── UserDAO.java        ✅ SQL tabanlı kullanıcı doğrulama
-│   │   ├── ProductDAO.java     ✅ Try-with-resources
-│   │   ├── TableDAO.java       ✅ Logger kullanımı
-│   │   ├── OrderDAO.java       ✅ Hata yönetimi
-│   │   └── ReportDAO.java
-│   │
-│   ├── database/               # Veritabanı Bağlantısı
-│   │   ├── DatabaseConnection.java  ✅ Singleton Pattern
-│   │   └── DatabaseUpdater.java     ✅ Environment Variables
-│   ���
-│   ├── model/                  # Model Sınıfları
-│   │   ├── Product.java
-│   │   ├── Table.java
-│   │   ├── Order.java
-│   │   └── OrderItem.java
-│   │
-│   └── *Controller.java        # JavaFX Controllers
-│       ├── LoginController.java     ✅ SQL doğrulama
-│       ├── MainMenuController.java
-│       ├── StockController.java
-│       ├── TablesController.java
-│       ├── OrderController.java
-│       └── ReportController.java
+### 2️⃣ MySQL Kurulumu
+
+<details>
+<summary>🍎 <strong>macOS</strong></summary>
+
+```bash
+brew install mysql
+brew services start mysql
+mysql_secure_installation
 ```
 
-## 🎯 Yapılan İyileştirmeler
+</details>
 
-### 1. ✅ SQL Tabanlı Kullanıcı Yönetimi
-- **Öncesi:** Kod içinde `if ("yonetici".equals(username) && "1234".equals(password))`
-- **Sonrası:** `UserDAO.authenticate(username, password)` - SQL'den kontrol eder
+<details>
+<summary>🪟 <strong>Windows</strong></summary>
 
-### 2. ✅ Profesyonel Kod Kalitesi
-- **Try-with-Resources:** Otomatik kaynak yönetimi
-- **JavaDoc:** Her metod dokümante edildi
-- **Logger:** `System.out.println` yerine `Logger` kullanımı
-- **Null Kontrolü:** Defensive programming
-- **Singleton Pattern:** DatabaseConnection
-- **PreparedStatement:** SQL Injection koruması
+1. 🌐 [MySQL Downloads](https://dev.mysql.com/downloads/installer/) sayfasına gidin
+2. 📥 "MySQL Installer for Windows" indirin
+3. 🖱️ "Developer Default" seçeneğiyle kurun
+4. 🔑 Root şifresi belirleyin (unutmayın!)
 
-### 3. ✅ Hata Yönetimi
+</details>
+
+<details>
+<summary>🐧 <strong>Linux</strong></summary>
+
+```bash
+sudo apt update
+sudo apt install mysql-server
+sudo mysql_secure_installation
+```
+
+</details>
+
+---
+
+### 3️⃣ Veritabanı Kurulumu
+
+```bash
+# Proje klasörüne gidin
+cd /path/to/project-repository-ergul-
+
+# MySQL'e bağlanın
+mysql -u root -p
+
+# Setup script'ini çalıştırın
+source setup_database.sql
+
+# Çıkış
+exit
+```
+
+> 💡 **İpucu:** Bu komut otomatik olarak tüm tabloları, örnek ürünleri ve varsayılan kullanıcıları oluşturur.
+
+---
+
+### 4️⃣ Veritabanı Bağlantısı Ayarları
+
+Eğer MySQL şifreniz varsayılandan farklıysa:
+
+📁 `src/main/java/.../database/DatabaseConnection.java` dosyasını açın:
+
 ```java
-// Öncesi
-if (conn == null) {
-    System.out.println("Bağlantı yok!");
-}
-
-// Sonrası
-if (conn == null) {
-    LOGGER.warning("❌ Veritabanı bağlantısı kurulamadı!");
-    return false;
-}
+// Bu satırı bulun ve şifrenizi girin:
+private static final String DB_PASSWORD = getEnv("DB_PASSWORD", "sizin_sifreniz");
 ```
 
-### 4. ✅ Veritabanı Yapısı
-- **15 Masa** (Masa 1 - Masa 15)
-- **12 Ürün** (Çay, Kahve, Oralet vb.)
-- **2 Kullanıcı** (yonetici, admin)
-- **Foreign Keys:** Veri bütünlüğü korunuyor
+---
 
-## 📊 Veritabanı Şeması
+### 5️⃣ Uygulamayı Çalıştırma
 
-### Users Tablosu
-```sql
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) UNIQUE,
-    password VARCHAR(255),
-    role VARCHAR(20) DEFAULT 'user'
-);
+```bash
+# macOS / Linux
+./mvnw clean javafx:run
+
+# Windows
+mvnw.cmd clean javafx:run
 ```
 
-### Products Tablosu
-```sql
-CREATE TABLE products (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100),
-    category VARCHAR(50),
-    price DECIMAL(10, 2),
-    stock_qty INT,
-    stock_package INT,
-    portions_per_package INT,
-    stock_display VARCHAR(100)
-);
+🎉 **Tebrikler!** Uygulama başlatıldı.
+
+---
+
+## 📖 Kullanım Kılavuzu
+
+### 🔐 Giriş Bilgileri
+
+| 👤 Kullanıcı Adı | 🔑 Şifre |
+|------------------|----------|
+| `yonetici` | `1234` |
+| `admin` | `admin123` |
+
+---
+
+### 🏠 Ana Menü
+
+Giriş yaptıktan sonra üç ana bölüm görürsünüz:
+
+```
+┌────────────────────────────────────────────────┐
+│                  ANA MENÜ                      │
+├────────────────────────────────────────────────┤
+│                                                │
+│   ┌──────────┐  ┌──────────┐  ┌──────────┐    │
+│   │    📦    │  │    🪑    │  │    📊    │    │
+│   │   STOK   │  │  MASALAR │  │  RAPOR   │    │
+│   └──────────┘  └──────────┘  └──────────┘    │
+│                                                │
+└────────────────────────────────────────────────┘
 ```
 
-### Tables Tablosu (15 Masa)
-```sql
-CREATE TABLE tables (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50),
-    is_occupied BOOLEAN DEFAULT FALSE
-);
+---
+
+### 🪑 Masa İşlemleri
+
+| Renk | Durum | Eylem |
+|------|-------|-------|
+| 🔵 Mavi | Boş masa | Tıklayarak sipariş ekranını açın |
+| 🔴 Kırmızı | Dolu masa | Mevcut siparişi görüntüleyin |
+
+**İşlemler:**
+- 🖱️ **Sol tık** → Sipariş ekranını aç
+- 🖱️ **Sağ tık** → Masayı sil (boşsa)
+- ➕ **Yeni Masa** → Otomatik numaralandırılmış masa ekle
+
+---
+
+### 🛒 Sipariş Alma
+
 ```
+1️⃣ Masaya tıklayın
+2️⃣ Ürünlere tıklayarak sipariş ekleyin
+3️⃣ Toplam otomatik hesaplanır
+4️⃣ "Hesabı Kapat" ile ödeme alın
+```
+
+| Buton | İşlev |
+|-------|-------|
+| 🗑️ Seçili Sil | Seçilen ürünü listeden çıkar |
+| 🧹 Tümünü Temizle | Tüm siparişi iptal et |
+| 💰 Hesabı Kapat | Ödeme al ve masayı boşalt |
+
+---
+
+### 📦 Stok Yönetimi
+
+| İşlem | Nasıl Yapılır |
+|-------|---------------|
+| ➕ Ürün Ekle | "+" butonuna tıklayın |
+| ✏️ Stok Güncelle | Ürüne çift tıklayın |
+| 🗑️ Ürün Sil | Ürünü seçip "Sil" butonuna tıklayın |
+
+---
+
+### 📊 Z Raporu
+
+Gün sonu raporu almak için:
+
+```
+1️⃣ "Z Raporu" ekranına gidin
+2️⃣ Günlük satışları inceleyin
+3️⃣ "Z Raporu Al" butonuna tıklayın
+4️⃣ PDF dosyasını kaydedin
+```
+
+> ⚠️ **Önemli:** Z raporu almadan önce tüm açık hesapları kapatmalısınız!
+
+---
 
 ## 🔧 Sorun Giderme
 
-### MySQL Çalışmıyor
-```bash
-# MySQL'i başlat
-sudo /usr/local/mysql/support-files/mysql.server start
+<details>
+<summary>❌ <strong>Uygulama açılmıyor</strong></summary>
 
-# Durumunu kontrol et
-sudo /usr/local/mysql/support-files/mysql.server status
-```
+1. Java kurulumunu kontrol edin: `java -version`
+2. MySQL'in çalıştığından emin olun
+3. `setup_database.sql` dosyasını tekrar çalıştırın
 
-### Veritabanı Bağlantısı Kurulamıyor
-1. MySQL şifresini kontrol et (`DatabaseConnection.java` içindeki `DB_PASSWORD`)
-2. Veritabanının mevcut olduğunu kontrol et:
-   ```bash
-   /usr/local/mysql/bin/mysql -u root -p -e "SHOW DATABASES;"
-   ```
-3. `setup_database.sql` dosyasını tekrar çalıştır
+</details>
 
-### Masa Sayısı Yanlış
+<details>
+<summary>❌ <strong>Veritabanı bağlantı hatası</strong></summary>
+
+1. MySQL servisinin çalıştığını kontrol edin
+2. `DatabaseConnection.java` dosyasındaki şifreyi kontrol edin
+3. Veritabanı adının `bahar_db` olduğundan emin olun
+
+</details>
+
+<details>
+<summary>❌ <strong>Ürünler görünmüyor</strong></summary>
+
+MySQL'de kontrol edin:
 ```sql
--- Tüm masaları sil ve 15 masa ekle
 USE bahar_db;
-TRUNCATE TABLE tables;
-INSERT INTO tables (name, is_occupied) VALUES 
-('Masa 1', FALSE), ('Masa 2', FALSE), ... ('Masa 15', FALSE);
+SELECT * FROM products;
 ```
 
-## 📝 Kod Kalite Standartları
+Boşsa, `setup_database.sql` tekrar çalıştırın.
 
-✅ **Single Responsibility Principle** - Her sınıf tek bir sorumluluğa sahip  
-✅ **DRY (Don't Repeat Yourself)** - Kod tekrarı yok  
-✅ **SOLID Principles** - Nesne yönelimli tasarım  
-✅ **Try-with-Resources** - Otomatik kaynak yönetimi  
-✅ **JavaDoc** - Eksiksiz dokümantasyon  
-✅ **Logger** - Profesyonel loglama  
-✅ **PreparedStatement** - SQL Injection koruması  
-✅ **Null Safety** - Null pointer kontrolü  
+</details>
 
-## 🎉 Başarıyla Tamamlandı!
+---
 
-Uygulama artık **production-ready** durumda:
-- ✅ SQL tabanlı güvenli giriş
-- ✅ Profesyonel kod kalitesi
-- ✅ Hata yönetimi
-- ✅ Dokümantasyon
-- ✅ 15 masa garantili
+## 🛠️ Teknik Bilgiler
 
-**Uygulama Kullanıma Hazır!** 🚀
+| Bileşen | Teknoloji |
+|---------|-----------|
+| 💻 Programlama Dili | Java 21 |
+| 🎨 UI Framework | JavaFX 21 |
+| 🗄️ Veritabanı | MySQL 8.x |
+| 📄 PDF Oluşturma | Apache PDFBox 3.0 |
+| 🔧 Build Tool | Maven |
+
+---
+
+## 📞 Destek
+
+Sorularınız veya önerileriniz için:
+
+- 📧 İletişim: [Proje sahibine ulaşın]
+- 🐛 Hata Bildirimi: GitHub Issues kullanın
+
+---
+
+<p align="center">
+  <sub>☕ Bahar Kıraathanesi Yönetim Sistemi ile yapıldı</sub>
+</p>
+
+<p align="center">
+  <sub>© 2025 - Tüm hakları saklıdır</sub>
+</p>
 

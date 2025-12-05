@@ -211,7 +211,6 @@ public class ReportController {
             contentStream.showText("SATIŞ DETAYLARI");
             contentStream.endText();
 
-            // Sütun Başlıkları
             yPosition -= 25;
             contentStream.setFont(boldFont, 14);
 

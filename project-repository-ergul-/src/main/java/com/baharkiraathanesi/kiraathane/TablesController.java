@@ -6,10 +6,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.text.TextAlignment;
@@ -49,7 +47,6 @@ public class TablesController {
                         maxNumber = num;
                     }
                 } catch (NumberFormatException e) {
-                    // "Masa Özel" gibi sayı içermeyen isimleri yoksay
                 }
             }
         }
@@ -57,7 +54,7 @@ public class TablesController {
         boolean success = tableDAO.addTable(newTableName);
 
         if (success) {
-            System.out.println("✅ Otomatik masa eklendi: " + newTableName);
+            System.out.println("Otomatik masa eklendi: " + newTableName);
             refreshTables();
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -123,7 +120,7 @@ public class TablesController {
             boolean success = tableDAO.deleteTable(tableId);
 
             if (success) {
-                System.out.println("✅ Masa silindi: " + tableName);
+                System.out.println("Masa silindi: " + tableName);
                 refreshTables();
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
