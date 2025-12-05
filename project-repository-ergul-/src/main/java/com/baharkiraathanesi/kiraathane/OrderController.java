@@ -149,11 +149,8 @@ public class OrderController {
         if (selectedText != null) {
             OrderItem selectedItem = orderItemMap.get(selectedText);
             if (selectedItem != null) {
-                // Veritabanından sil
                 orderDAO.removeOrderItem(selectedItem.getId(), selectedItem.getProductId(), selectedItem.getQuantity());
-                // Listeyi güncelle
                 refreshOrderList();
-                // Ürün silinince stok geri geleceği için butonları yenile (Gri olan açılabilir)
                 loadProducts();
             }
         } else {
@@ -178,13 +175,11 @@ public class OrderController {
             return;
         }
 
-        // Tüm kalemleri tek tek sil
         for (OrderItem item : items) {
             orderDAO.removeOrderItem(item.getId(), item.getProductId(), item.getQuantity());
         }
 
         refreshOrderList();
-        // Stoklar geri geldiği için butonları yenile
         loadProducts();
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);

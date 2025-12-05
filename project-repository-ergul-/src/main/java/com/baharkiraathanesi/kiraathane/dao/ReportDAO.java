@@ -161,7 +161,6 @@ public class ReportDAO {
                 return true;
 
             } catch (SQLException e) {
-                // Hata durumunda geri al
                 conn.rollback();
                 System.out.println("Veri sıfırlama hatası: " + e.getMessage());
                 e.printStackTrace();

@@ -68,7 +68,6 @@ public class TableDAO {
             return false;
         }
 
-        // Yeni eklenen masa varsayılan olarak is_deleted = FALSE olur
         final String SQL = "INSERT INTO tables (name, is_occupied, is_deleted) VALUES (?, FALSE, FALSE)";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -92,8 +91,6 @@ public class TableDAO {
     }
 
     public boolean deleteTable(int tableId) {
-        // DEĞİŞİKLİK: DELETE yerine UPDATE kullanıyoruz.
-        // Bu sayede masa veritabanında kalıyor (raporlar bozulmuyor) ama listelerde görünmüyor.
         final String SQL = "UPDATE tables SET is_deleted = TRUE WHERE id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();

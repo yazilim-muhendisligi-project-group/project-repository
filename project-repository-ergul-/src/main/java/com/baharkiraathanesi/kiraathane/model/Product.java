@@ -71,7 +71,6 @@ public class Product {
         this.stockDisplay = stockPackage + " paket (" + stockQty + " " + unit + ")";
     }
 
-    // Test ederken ürün adını yazdırmak için
     @Override
     public String toString() {
         return name + " - " + stockDisplay + " - " + price + " TL";

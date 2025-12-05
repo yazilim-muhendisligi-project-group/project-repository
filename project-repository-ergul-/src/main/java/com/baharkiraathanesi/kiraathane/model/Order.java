@@ -24,7 +24,6 @@ public class Order {
         this.createdAt = createdAt;
     }
 
-    // Getters and Setters
     public int getId() {
         return id;
     }
