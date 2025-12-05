@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane stylesheets="@styles.css" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.baharkiraathanesi.kiraathane.TablesController">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: white; -fx-padding: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);">
+            <Button text="← Ana Menü" onAction="#goBack" style="-fx-background-color: #757575; -fx-text-fill: white;"/>
+            <Label text="Masalar" styleClass="header-label"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="+ Masa Ekle" onAction="#addNewTable" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
+            <FlowPane fx:id="tablesContainer" hgap="20" vgap="20" alignment="TOP_LEFT" style="-fx-padding: 30;"/>
+        </ScrollPane>
+    </center>
+
+    <bottom>
+        <HBox spacing="30" alignment="CENTER" style="-fx-padding: 15; -fx-background-color: #f5f5f5; -fx-border-color: #ddd; -fx-border-width: 1 0 0 0;">
+            <!-- Mavi Kutu -->
+            <HBox spacing="10" alignment="CENTER">
+                <Label style="-fx-background-color: #2196F3; -fx-min-width: 20; -fx-min-height: 20; -fx-background-radius: 5;"/>
+                <Label text="BOŞ" style="-fx-font-weight: bold; -fx-text-fill: #333;"/>
+            </HBox>
+
+            <!-- Kırmızı Kutu -->
+            <HBox spacing="10" alignment="CENTER">
+                <Label style="-fx-background-color: #D32F2F; -fx-min-width: 20; -fx-min-height: 20; -fx-background-radius: 5;"/>
+                <Label text="DOLU" style="-fx-font-weight: bold; -fx-text-fill: #333;"/>
+            </HBox>
+            <Label text="• Masaya sağ tıklayarak silebilirsiniz" style="-fx-text-fill: gray; -fx-font-size: 16px;"/>
+        </HBox>
+    </bottom>
+</BorderPane>

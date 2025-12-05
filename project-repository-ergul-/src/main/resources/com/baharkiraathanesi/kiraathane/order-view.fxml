@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane stylesheets="@styles.css" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.baharkiraathanesi.kiraathane.OrderController">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #333; -fx-padding: 15;">
+            <Button text="← Masalara Dön" onAction="#goBack" style="-fx-background-color: #555;"/>
+            <Label fx:id="tableLabel" text="Masa X Sipariş" textFill="WHITE">
+                <font><Font name="System Bold" size="20"/></font>
+            </Label>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true">
+            <FlowPane fx:id="productsContainer" hgap="15" vgap="15" style="-fx-padding: 20;"/>
+        </ScrollPane>
+    </center>
+
+    <right>
+        <VBox spacing="15" minWidth="300" style="-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, -5, 0);">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+            <Label text="Sipariş Özeti" styleClass="header-label" style="-fx-font-size: 18px;"/>
+            <Separator/>
+
+            <ListView fx:id="orderListView" VBox.vgrow="ALWAYS" style="-fx-background-insets: 0; -fx-padding: 5;"/>
+
+            <Separator/>
+
+            <HBox alignment="CENTER_RIGHT">
+                <Label fx:id="totalLabel" text="Toplam: 0.00 TL">
+                    <font><Font name="System Bold" size="22"/></font>
+                </Label>
+            </HBox>
+
+            <VBox spacing="10">
+                <Button text="HESABI KAPAT" onAction="#closeCheck"
+                        maxWidth="Infinity" style="-fx-background-color: #FF5722; -fx-font-size: 16px; -fx-padding: 10;"/>
+
+                <HBox spacing="10">
+                    <Button text="Seçiliyi Sil" onAction="#deleteSelectedItem" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="danger-button"/>
+                    <Button text="Hepsini Sil" onAction="#clearAllItems" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-background-color: #9E9E9E;"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </right>
+</BorderPane>
