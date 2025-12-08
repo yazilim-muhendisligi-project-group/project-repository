@@ -2,9 +2,11 @@ package com.baharkiraathanesi.kiraathane.dao;
 
 import com.baharkiraathanesi.kiraathane.database.DatabaseConnection;
 import com.baharkiraathanesi.kiraathane.model.Table;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class TableDAO {
@@ -13,7 +15,6 @@ public class TableDAO {
 
     public List<Table> getAllTables() {
         List<Table> tableList = new ArrayList<>();
-        // DEĞİŞİKLİK: Sadece is_deleted = 0 (FALSE) olanları getir
         final String SQL = "SELECT * FROM tables WHERE is_deleted = FALSE ORDER BY id";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -21,7 +22,7 @@ public class TableDAO {
              ResultSet rs = stmt.executeQuery(SQL)) {
 
             if (conn == null) {
-                LOGGER.warning("TableDAO: Veritabanı bağlantısı kurulamadı!");
+                LOGGER.warning("Veritabani baglantisi kurulamadi");
                 return tableList;
             }
 
@@ -35,7 +36,7 @@ public class TableDAO {
             }
 
         } catch (SQLException e) {
-            LOGGER.severe("Masalar getirilirken hata oluştu: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Masalar getirilirken hata olustu", e);
         }
 
         return tableList;
@@ -56,7 +57,7 @@ public class TableDAO {
             return affectedRows > 0;
 
         } catch (SQLException e) {
-            LOGGER.severe("Masa durumu güncellenirken hata: ID=" + tableId + " - " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Masa durumu guncellenirken hata: ID=" + tableId, e);
         }
 
         return false;
@@ -64,7 +65,7 @@ public class TableDAO {
 
     public boolean addTable(String tableName) {
         if (tableName == null || tableName.trim().isEmpty()) {
-            LOGGER.warning("Masa adı boş olamaz!");
+            LOGGER.warning("Masa adi bos olamaz");
             return false;
         }
 
@@ -84,7 +85,7 @@ public class TableDAO {
             }
 
         } catch (SQLException e) {
-            LOGGER.severe("Masa eklenirken hata: " + tableName + " - " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Masa eklenirken hata: " + tableName, e);
         }
 
         return false;
@@ -103,7 +104,7 @@ public class TableDAO {
             return affectedRows > 0;
 
         } catch (SQLException e) {
-            LOGGER.severe("Masa silinirken hata: ID=" + tableId + " - " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Masa silinirken hata: ID=" + tableId, e);
         }
 
         return false;
@@ -120,36 +121,36 @@ public class TableDAO {
             }
 
             stmt.setInt(1, tableId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return new Table(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getBoolean("is_occupied")
-                );
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Table(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getBoolean("is_occupied")
+                    );
+                }
             }
 
         } catch (SQLException e) {
-            LOGGER.info("Masa getirilirken hata: ID=" + tableId + " - " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Masa getirilirken hata: ID=" + tableId, e);
         }
 
         return null;
     }
 
     public int getTableCount() {
-        final String SQL = "SELECT COUNT(*) as total FROM tables";
+        final String SQL = "SELECT COUNT(*) as total FROM tables WHERE is_deleted = FALSE";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(SQL)) {
+             PreparedStatement stmt = conn.prepareStatement(SQL);
+             ResultSet rs = stmt.executeQuery()) {
 
             if (conn != null && rs.next()) {
                 return rs.getInt("total");
             }
 
         } catch (SQLException e) {
-            LOGGER.info("Masa sayısı hesaplanırken hata: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Masa sayisi hesaplanirken hata", e);
         }
 
         return 0;

@@ -23,9 +23,10 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-// DÜZELTME: Standart fontlar yerine özel font yükleyicisi eklendi
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,8 +38,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ReportController {
+
+    private static final Logger LOGGER = Logger.getLogger(ReportController.class.getName());
 
     @FXML
     private TableView<Order> reportTable;
@@ -54,7 +59,6 @@ public class ReportController {
 
     @FXML
     private TableColumn<Order, Double> totalColumn;
-
 
     @FXML
     private Label totalRevenueLabel;
@@ -78,7 +82,7 @@ public class ReportController {
 
     @FXML
     public void initialize() {
-        System.out.println("=== ReportController Başlatılıyor ===");
+        LOGGER.info("ReportController baslatiliyor");
 
         LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -92,21 +96,18 @@ public class ReportController {
     @FXML
     private void printZReport() {
         if (orderDAO.hasOpenOrders()) {
-            Alert warningAlert = new Alert(Alert.AlertType.ERROR);
-            warningAlert.setTitle("Z Raporu Alınamaz");
-            warningAlert.setHeaderText("⚠️ Hesabı Kapatılmamış Masa Var!");
-            warningAlert.setContentText("Z raporu alabilmek için önce tüm masaların hesaplarını kapatmanız gerekmektedir.\n\n" +
-                    "Lütfen açık hesapları kontrol edip kapatın.");
-            warningAlert.showAndWait();
+            showAlert(Alert.AlertType.ERROR, "Z Raporu Alinamaz",
+                    "Z raporu alabilmek icin once tum masalarin hesaplarini kapatmaniz gerekmektedir.");
             return;
         }
 
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Z Raporu Onayı");
-        confirmAlert.setHeaderText("Z Raporu almak istediğinize emin misiniz?");
+        confirmAlert.setTitle("Z Raporu Onayi");
+        confirmAlert.setHeaderText("Z Raporu almak istediginize emin misiniz?");
 
-        String content = "Toplam İşlem: " + (currentOrders == null ? 0 : currentOrders.size()) + "\n" +
-                "Toplam Ciro: " + String.format("%.2f TL", currentRevenue) + "\n\n" + "Bu işlem geri alınamaz! Bugünkü veriler PDF'e kaydedilip sıfırlanacak.";
+        String content = "Toplam Islem: " + (currentOrders == null ? 0 : currentOrders.size()) + "\n" +
+                "Toplam Ciro: " + String.format("%.2f TL", currentRevenue) + "\n\n" +
+                "Bu islem geri alinamaz! Bugunku veriler PDF'e kaydedilip sifirlanacak.";
 
         confirmAlert.setContentText(content);
 
@@ -117,6 +118,9 @@ public class ReportController {
     }
 
     private void generatePDFReport() {
+        PDDocument document = null;
+        PDPageContentStream contentStream = null;
+
         try {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Z Raporu Kaydet");
@@ -127,7 +131,7 @@ public class ReportController {
 
             fileChooser.setInitialFileName(defaultFileName);
             fileChooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter("PDF Dosyası", "*.pdf")
+                    new FileChooser.ExtensionFilter("PDF Dosyasi", "*.pdf")
             );
 
             File file = fileChooser.showSaveDialog(reportTable.getScene().getWindow());
@@ -135,60 +139,81 @@ public class ReportController {
                 return;
             }
 
-            PDDocument document = new PDDocument();
+            document = new PDDocument();
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
 
-            PDPageContentStream contentStream = new PDPageContentStream(document, page);
+            contentStream = new PDPageContentStream(document, page);
             PDFont normalFont;
             PDFont boldFont;
 
             try {
-                normalFont = PDType0Font.load(document, new File("C:/Windows/Fonts/arial.ttf"));
-                boldFont = PDType0Font.load(document, new File("C:/Windows/Fonts/arialbd.ttf"));
+                String os = System.getProperty("os.name").toLowerCase();
+                String normalFontPath;
+                String boldFontPath;
+
+                if (os.contains("mac")) {
+                    normalFontPath = "/System/Library/Fonts/Supplemental/Arial.ttf";
+                    boldFontPath = "/System/Library/Fonts/Supplemental/Arial Bold.ttf";
+                } else if (os.contains("win")) {
+                    normalFontPath = "C:/Windows/Fonts/arial.ttf";
+                    boldFontPath = "C:/Windows/Fonts/arialbd.ttf";
+                } else {
+                    normalFontPath = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf";
+                    boldFontPath = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf";
+                }
+
+                File normalFontFile = new File(normalFontPath);
+                File boldFontFile = new File(boldFontPath);
+
+                if (normalFontFile.exists() && boldFontFile.exists()) {
+                    normalFont = PDType0Font.load(document, normalFontFile);
+                    boldFont = PDType0Font.load(document, boldFontFile);
+                } else {
+                    LOGGER.warning("Arial fontu bulunamadi, Helvetica kullaniliyor");
+                    normalFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+                    boldFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+                }
             } catch (IOException e) {
-                System.err.println("Arial fontu yüklenemedi, standart font deneniyor (Türkçe karakter hatası verebilir!)");
-                throw new RuntimeException("Font yükleme hatası: C:/Windows/Fonts/arial.ttf bulunamadı.");
+                LOGGER.log(Level.WARNING, "Font yuklenemedi, Helvetica kullaniliyor", e);
+                normalFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+                boldFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
             }
 
-            // Başlık
             contentStream.setFont(boldFont, 18);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, 750);
-            contentStream.showText("BAHAR KIRAATHANESİ");
+            contentStream.showText("BAHAR KIRAATHANESI");
             contentStream.endText();
 
             contentStream.setFont(boldFont, 14);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, 730);
-            contentStream.showText("GÜN SONU RAPORU (Z RAPORU)");
+            contentStream.showText("GUN SONU RAPORU (Z RAPORU)");
             contentStream.endText();
 
-            // Tarih ve saat
             contentStream.setFont(normalFont, 10);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, 710);
             contentStream.showText("Tarih: " + now.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
             contentStream.endText();
 
-            // Çizgi
             contentStream.moveTo(50, 700);
             contentStream.lineTo(550, 700);
             contentStream.stroke();
 
-            // Özet bilgiler
             float yPosition = 680;
             contentStream.setFont(boldFont, 12);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
-            contentStream.showText("ÖZET BİLGİLER");
+            contentStream.showText("OZET BILGILER");
             contentStream.endText();
 
             yPosition -= 25;
             contentStream.setFont(normalFont, 11);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
-            contentStream.showText("Toplam İşlem Sayısı: " + (currentOrders == null ? 0 : currentOrders.size()));
+            contentStream.showText("Toplam Islem Sayisi: " + (currentOrders == null ? 0 : currentOrders.size()));
             contentStream.endText();
 
             yPosition -= 20;
@@ -197,18 +222,16 @@ public class ReportController {
             contentStream.showText(String.format("Toplam Ciro: %.2f TL", currentRevenue));
             contentStream.endText();
 
-            // Çizgi
             yPosition -= 10;
             contentStream.moveTo(50, yPosition);
             contentStream.lineTo(550, yPosition);
             contentStream.stroke();
 
-            // Satış detayları
             yPosition -= 25;
             contentStream.setFont(boldFont, 14);
             contentStream.beginText();
             contentStream.newLineAtOffset(50, yPosition);
-            contentStream.showText("SATIŞ DETAYLARI");
+            contentStream.showText("SATIS DETAYLARI");
             contentStream.endText();
 
             yPosition -= 25;
@@ -273,49 +296,48 @@ public class ReportController {
             }
 
             contentStream.close();
+            contentStream = null;
             document.save(file);
-            document.close();
 
-            System.out.println("PDF başarıyla oluşturuldu: " + file.getAbsolutePath());
+            LOGGER.info("PDF basariyla olusturuldu: " + file.getAbsolutePath());
 
             boolean resetSuccess = reportDAO.resetDailyData();
 
             if (resetSuccess) {
-                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle("Başarılı");
-                successAlert.setHeaderText("Z Raporu Başarıyla Oluşturuldu!");
-                successAlert.setContentText(
+                showAlert(Alert.AlertType.INFORMATION, "Z Raporu Basariyla Olusturuldu",
                         "PDF Kaydedildi: " + file.getName() + "\n\n" +
-                                "Bugünkü veriler sıfırlandı.\n" +
-                                "Yeni güne hazırsınız!"
-                );
-                successAlert.showAndWait();
+                        "Bugunku veriler sifirlandi.\n" +
+                        "Yeni gune hazirsiniz!");
 
                 loadReportData();
                 loadWeeklyChart();
                 loadMonthlyChart();
             } else {
-                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                errorAlert.setTitle("Hata");
-                errorAlert.setContentText("PDF oluşturuldu ancak veriler sıfırlanırken hata oluştu!");
-                errorAlert.showAndWait();
+                showAlert(Alert.AlertType.ERROR, "Hata",
+                        "PDF olusturuldu ancak veriler sifirlanirken hata olustu!");
             }
 
         } catch (IOException e) {
-            System.out.println(" PDF oluşturma hatası: " + e.getMessage());
-            e.printStackTrace();
-
-            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-            errorAlert.setTitle("Hata");
-            errorAlert.setHeaderText("PDF Oluşturma Hatası");
-            errorAlert.setContentText("PDF dosyası oluşturulurken bir hata oluştu:\n" + e.getMessage());
-            errorAlert.showAndWait();
+            LOGGER.log(Level.SEVERE, "PDF olusturma hatasi", e);
+            showAlert(Alert.AlertType.ERROR, "PDF Olusturma Hatasi",
+                    "PDF dosyasi olusturulurken bir hata olustu.");
+        } finally {
+            try {
+                if (contentStream != null) {
+                    contentStream.close();
+                }
+                if (document != null) {
+                    document.close();
+                }
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "PDF kaynaklari kapatilirken hata", e);
+            }
         }
     }
 
     private void loadReportData() {
         try {
-            System.out.println("Bugünün raporu yükleniyor...");
+            LOGGER.info("Bugunku rapor yukleniyor...");
 
             orderIdColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
             tableNameColumn.setCellValueFactory(new PropertyValueFactory<>("tableName"));
@@ -345,7 +367,7 @@ public class ReportController {
                 currentRevenue = 0.0;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Rapor verileri yuklenirken hata", e);
         }
     }
 
@@ -355,13 +377,13 @@ public class ReportController {
             if (weeklyRevenueChart == null) return;
 
             if (weeklyReports.isEmpty()) {
-                weeklyRevenueChart.setTitle("Son 7 Günlük Ciro Raporu (Veri Yok)");
+                weeklyRevenueChart.setTitle("Son 7 Gunluk Ciro Raporu (Veri Yok)");
                 weeklyRevenueChart.getData().clear();
                 return;
             }
 
             XYChart.Series<String, Double> series = new XYChart.Series<>();
-            series.setName("Günlük Ciro (TL)");
+            series.setName("Gunluk Ciro (TL)");
 
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM");
             Locale trLocale = new Locale("tr", "TR");
@@ -374,11 +396,11 @@ public class ReportController {
 
             weeklyRevenueChart.getData().clear();
             weeklyRevenueChart.getData().add(series);
-            weeklyRevenueChart.setTitle("Son 7 Günlük Ciro Raporu");
+            weeklyRevenueChart.setTitle("Son 7 Gunluk Ciro Raporu");
             weeklyRevenueChart.setLegendVisible(false);
             weeklyRevenueChart.setCreateSymbols(true);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Haftalik grafik yuklenirken hata", e);
         }
     }
 
@@ -388,13 +410,13 @@ public class ReportController {
             if (monthlyRevenueChart == null) return;
 
             if (monthlyReports.isEmpty()) {
-                monthlyRevenueChart.setTitle("Aylık Ciro Raporu (Veri Yok)");
+                monthlyRevenueChart.setTitle("Aylik Ciro Raporu (Veri Yok)");
                 monthlyRevenueChart.getData().clear();
                 return;
             }
 
             XYChart.Series<String, Double> series = new XYChart.Series<>();
-            series.setName("Aylık Toplam Ciro (TL)");
+            series.setName("Aylik Toplam Ciro (TL)");
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM yyyy", new Locale("tr", "TR"));
 
@@ -405,11 +427,11 @@ public class ReportController {
 
             monthlyRevenueChart.getData().clear();
             monthlyRevenueChart.getData().add(series);
-            monthlyRevenueChart.setTitle("Aylık Ciro Dağılımı");
+            monthlyRevenueChart.setTitle("Aylik Ciro Dagilimi");
             monthlyRevenueChart.setLegendVisible(false);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Aylik grafik yuklenirken hata", e);
         }
     }
 
@@ -417,4 +439,13 @@ public class ReportController {
     public void goBackToMenu() {
         HelloApplication.changeScene("main-menu.fxml");
     }
+
+    private void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 }
+

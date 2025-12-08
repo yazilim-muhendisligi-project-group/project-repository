@@ -1,0 +1,10 @@
+# Database Connection Configuration
+# Copy this file to db.properties and update with your actual credentials
+# WARNING: Never commit db.properties to version control
+
+db.host=localhost
+db.port=3306
+db.name=bahar_db
+db.user=root
+db.password=YOUR_PASSWORD_HERE
+

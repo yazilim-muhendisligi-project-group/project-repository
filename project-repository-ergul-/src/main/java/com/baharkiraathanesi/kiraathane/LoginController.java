@@ -7,7 +7,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.Alert.AlertType;
 
+import java.util.logging.Logger;
+
 public class LoginController {
+
+    private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
 
     @FXML
     private TextField usernameField;
@@ -27,18 +31,18 @@ public class LoginController {
         String password = passwordField.getText();
 
         if (isLoginSuccessful(username, password)) {
-            System.out.println("Giriş başarılı: " + username);
+            LOGGER.info("Giris basarili: " + username);
             HelloApplication.changeScene("main-menu.fxml");
         } else {
-            System.out.println("Başarısız giriş denemesi: " + username);
-            showAlert(AlertType.ERROR, "Hata", "Kullanıcı adı veya şifre yanlış!");
+            LOGGER.warning("Basarisiz giris denemesi: " + username);
+            showAlert(AlertType.ERROR, "Hata", "Kullanici adi veya sifre yanlis!");
             passwordField.clear();
         }
     }
 
     private boolean isLoginSuccessful(String username, String password) {
         if (username.isEmpty() || password.isEmpty()) {
-            showAlert(AlertType.WARNING, "Uyarı", "Lütfen kullanıcı adı ve şifre giriniz!");
+            showAlert(AlertType.WARNING, "Uyari", "Lutfen kullanici adi ve sifre giriniz!");
             return false;
         }
 
@@ -53,3 +57,4 @@ public class LoginController {
         alert.showAndWait();
     }
 }
+

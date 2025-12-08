@@ -1,12 +1,17 @@
 package com.baharkiraathanesi.kiraathane.dao;
 
 import com.baharkiraathanesi.kiraathane.database.DatabaseConnection;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UserDAO {
+
+    private static final Logger LOGGER = Logger.getLogger(UserDAO.class.getName());
 
     public boolean authenticate(String username, String password) {
         if (username == null || password == null || username.trim().isEmpty()) {
@@ -19,7 +24,7 @@ public class UserDAO {
              PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
             if (conn == null) {
-                System.out.println("UserDAO: Veritabanı bağlantısı kurulamadı!");
+                LOGGER.warning("Veritabani baglantisi kurulamadi");
                 return false;
             }
 
@@ -29,14 +34,13 @@ public class UserDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     String role = rs.getString("role");
-                    System.out.println("Kullanıcı bulundu: " + username + " (Rol: " + role + ")");
+                    LOGGER.info("Kullanici bulundu: " + username + " (Rol: " + role + ")");
                     return true;
                 }
             }
 
         } catch (SQLException e) {
-            System.out.println("UserDAO authenticate hatası: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Kimlik dogrulama hatasi", e);
         }
 
         return false;
@@ -65,7 +69,7 @@ public class UserDAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("UserDAO getUserRole hatası: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Kullanici rolu alinirken hata", e);
         }
 
         return null;

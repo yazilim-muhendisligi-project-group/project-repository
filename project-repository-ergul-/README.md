@@ -1,350 +1,443 @@
-# ☕ Bahar Kıraathanesi - Cafe & Tea House Management System
+# Bahar Kiraathanesi - Cafe Management System
 
 <p align="center">
-  <img src="src/main/resources/images/cay_icon.png" alt="Bahar Kıraathanesi Logo" width="120"/>
+  <img src="src/main/resources/images/cay_icon.png" alt="Bahar Kiraathanesi Logo" width="120"/>
 </p>
 
 <p align="center">
-  <strong>Modern, kullanımı kolay kıraathane ve kafe yönetim sistemi</strong>
+  <strong>Modern Point-of-Sale System for Cafes and Tea Houses</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk" alt="Java 21"/>
-  <img src="https://img.shields.io/badge/JavaFX-21-blue?style=flat-square" alt="JavaFX 21"/>
-  <img src="https://img.shields.io/badge/MySQL-8.x-blue?style=flat-square&logo=mysql&logoColor=white" alt="MySQL"/>
-  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
+  <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21"/>
+  <img src="https://img.shields.io/badge/JavaFX-21.0.6-007396?style=for-the-badge&logo=java&logoColor=white" alt="JavaFX"/>
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"/>
+  <img src="https://img.shields.io/badge/Maven-3.8+-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white" alt="Maven"/>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Active-success?style=flat-square" alt="Status"/>
+  <img src="https://img.shields.io/badge/License-Proprietary-blue?style=flat-square" alt="License"/>
+  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat-square" alt="Platform"/>
 </p>
 
 ---
 
-## 📋 İçindekiler
+## Table of Contents
 
-- [✨ Özellikler](#-özellikler)
-- [🖥️ Ekran Görüntüleri](#️-ekran-görüntüleri)
-- [🚀 Kurulum](#-kurulum)
-- [📖 Kullanım Kılavuzu](#-kullanım-kılavuzu)
-- [🔧 Sorun Giderme](#-sorun-giderme)
-- [📞 Destek](#-destek)
-
----
-
-## ✨ Özellikler
-
-| Özellik | Açıklama |
-|---------|----------|
-| 🔐 **Güvenli Giriş** | SQL tabanlı kullanıcı doğrulama sistemi |
-| 🪑 **Masa Yönetimi** | Masaları ekleyin, silin ve durumlarını takip edin |
-| 🛒 **Sipariş Takibi** | Kolay ve hızlı sipariş alma arayüzü |
-| 📦 **Stok Kontrolü** | Ürün ve envanter yönetimi |
-| 📊 **Raporlama** | Günlük, haftalık ve aylık satış raporları |
-| 🧾 **Z Raporu** | PDF formatında gün sonu raporu oluşturma |
+- [Overview](#overview)
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Technology Stack](#technology-stack)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running the Application](#running-the-application)
+- [Project Structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
 
 ---
 
-## 🖥️ Ne Yapar Bu Uygulama?
+## Overview
 
-Bu uygulama, kafe, kıraathane ve benzeri işletmeler için tasarlanmış bir **satış noktası (POS) sistemidir**.
+**Bahar Kiraathanesi** is a comprehensive desktop application designed for cafes, tea houses, and similar hospitality businesses. It provides a complete point-of-sale (POS) solution with real-time table management, inventory tracking, and detailed reporting.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│   👤 Giriş Yap  →  🏠 Ana Menü  →  📋 İşlem Seç            │
-│                                                             │
-│   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│   │   📦 Stok   │  │  🪑 Masalar │  │  📊 Rapor   │        │
-│   └─────────────┘  └─────────────┘  └─────────────┘        │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
++------------------+     +------------------+     +------------------+
+|                  |     |                  |     |                  |
+|   Login Screen   | --> |    Main Menu     | --> |   Operations     |
+|                  |     |                  |     |                  |
++------------------+     +------------------+     +------------------+
+                                  |
+                 +----------------+----------------+
+                 |                |                |
+                 v                v                v
+          +-----------+    +-----------+    +-----------+
+          |   Stock   |    |  Tables   |    |  Reports  |
+          | Management|    |  & Orders |    | & Z-Report|
+          +-----------+    +-----------+    +-----------+
 ```
 
 ---
 
-## 🚀 Kurulum
+## Features
 
-### 📋 Gereksinimler
+<table>
+<tr>
+<td width="50%">
 
-| Gereksinim | Minimum Versiyon |
-|------------|------------------|
-| ☕ Java | 21 veya üzeri |
-| 🐬 MySQL | 8.0 veya üzeri |
-| 💻 İşletim Sistemi | Windows / macOS / Linux |
+### Core Modules
+
+| Module | Description |
+|:-------|:------------|
+| **Authentication** | Secure login with role-based access |
+| **Table Management** | Real-time table status tracking |
+| **Order Processing** | Quick order entry with auto-updates |
+| **Stock Control** | Package-based inventory system |
+| **Reporting** | Visual charts and analytics |
+| **Z-Report** | End-of-day PDF generation |
+
+</td>
+<td width="50%">
+
+### Key Highlights
+
+- Real-time table occupancy visualization
+- Automatic stock deduction on orders
+- Low-stock alerts and notifications
+- Weekly and monthly revenue charts
+- PDF export for daily reports
+- Multi-platform support
+
+</td>
+</tr>
+</table>
 
 ---
 
-### 1️⃣ Java Kurulumu
+## Screenshots
 
-<details>
-<summary>🍎 <strong>macOS</strong> (tıklayın)</summary>
+<table>
+<tr>
+<td align="center" width="50%">
+<strong>Login Screen</strong><br/>
+Secure authentication system
+</td>
+<td align="center" width="50%">
+<strong>Main Menu</strong><br/>
+Central navigation hub
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<strong>Table Management</strong><br/>
+Visual table status (Available/Occupied)
+</td>
+<td align="center" width="50%">
+<strong>Order Screen</strong><br/>
+Quick product selection and order management
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<strong>Stock Control</strong><br/>
+Inventory management with package tracking
+</td>
+<td align="center" width="50%">
+<strong>Reports</strong><br/>
+Daily, weekly, and monthly analytics
+</td>
+</tr>
+</table>
+
+---
+
+## Technology Stack
+
+<table>
+<tr>
+<th>Category</th>
+<th>Technology</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/-Language-orange?style=flat-square"/></td>
+<td>Java</td>
+<td>21+</td>
+<td>Core programming language</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/-UI-blue?style=flat-square"/></td>
+<td>JavaFX</td>
+<td>21.0.6</td>
+<td>Desktop UI framework</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/-Database-green?style=flat-square"/></td>
+<td>MySQL</td>
+<td>8.0+</td>
+<td>Data persistence</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/-Build-red?style=flat-square"/></td>
+<td>Maven</td>
+<td>3.8+</td>
+<td>Dependency management</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/-PDF-purple?style=flat-square"/></td>
+<td>Apache PDFBox</td>
+<td>3.x</td>
+<td>PDF report generation</td>
+</tr>
+</table>
+
+---
+
+## Prerequisites
+
+Before installation, ensure you have the following:
+
+### Required Software
+
+| Software | Minimum Version | Download Link |
+|:---------|:----------------|:--------------|
+| Java JDK | 21 | [Adoptium](https://adoptium.net/) |
+| MySQL Server | 8.0 | [MySQL Downloads](https://dev.mysql.com/downloads/) |
+| Maven | 3.8 (optional) | [Apache Maven](https://maven.apache.org/download.cgi) |
+
+### Verification Commands
 
 ```bash
-# Homebrew ile kurulum
-brew install openjdk@21
-
-# Homebrew yoksa önce onu kurun:
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-</details>
-
-<details>
-<summary>🪟 <strong>Windows</strong> (tıklayın)</summary>
-
-1. 🌐 [Adoptium](https://adoptium.net/) sitesine gidin
-2. 📥 **"Latest LTS Release"** butonuna tıklayın
-3. 📦 `.msi` dosyasını indirin
-4. 🖱️ Çift tıklayıp kurulum sihirbazını takip edin
-
-</details>
-
-<details>
-<summary>🐧 <strong>Linux</strong> (tıklayın)</summary>
-
-```bash
-sudo apt update
-sudo apt install openjdk-21-jdk
-```
-
-</details>
-
-#### ✅ Kurulum Kontrolü
-
-```bash
+# Check Java version
 java -version
-# Çıktı: openjdk version "21.0.x" ...
+
+# Check Maven version (optional)
+mvn -version
+
+# Check MySQL status
+mysql --version
 ```
 
 ---
 
-### 2️⃣ MySQL Kurulumu
+## Installation
 
-<details>
-<summary>🍎 <strong>macOS</strong></summary>
+### Step 1: Clone the Repository
 
 ```bash
-brew install mysql
-brew services start mysql
-mysql_secure_installation
+git clone <repository-url>
+cd project-repository-ergul-
 ```
+
+### Step 2: Database Setup
+
+Connect to MySQL and run the setup script:
+
+```bash
+# Option 1: Using MySQL CLI
+mysql -u root -p < src/main/resources/db/setup_database.sql
+
+# Option 2: Using MySQL Workbench
+# Open and execute: src/main/resources/db/setup_database.sql
+```
+
+<details>
+<summary><strong>What does the setup script create?</strong></summary>
+
+- Database: `bahar_db`
+- Tables: `users`, `tables`, `products`, `orders`, `order_items`
+- Default admin user: `admin` / `admin`
+- Sample product data
 
 </details>
 
-<details>
-<summary>🪟 <strong>Windows</strong></summary>
-
-1. 🌐 [MySQL Downloads](https://dev.mysql.com/downloads/installer/) sayfasına gidin
-2. 📥 "MySQL Installer for Windows" indirin
-3. 🖱️ "Developer Default" seçeneğiyle kurun
-4. 🔑 Root şifresi belirleyin (unutmayın!)
-
-</details>
-
-<details>
-<summary>🐧 <strong>Linux</strong></summary>
+### Step 3: Configure Database Connection
 
 ```bash
-sudo apt update
-sudo apt install mysql-server
-sudo mysql_secure_installation
+# Copy the example configuration
+cp src/main/resources/db.properties.example src/main/resources/db.properties
 ```
 
-</details>
+Edit `db.properties` with your credentials:
 
----
-
-### 3️⃣ Veritabanı Kurulumu
-
-```bash
-# Proje klasörüne gidin
-cd /path/to/project-repository-ergul-
-
-# MySQL'e bağlanın
-mysql -u root -p
-
-# Setup script'ini çalıştırın
-source setup_database.sql
-
-# Çıkış
-exit
+```properties
+db.host=localhost
+db.port=3306
+db.name=bahar_db
+db.user=root
+db.password=YOUR_PASSWORD
 ```
 
-> 💡 **İpucu:** Bu komut otomatik olarak tüm tabloları, örnek ürünleri ve varsayılan kullanıcıları oluşturur.
+> **Security Note:** The `db.properties` file is excluded from version control via `.gitignore`
 
----
-
-### 4️⃣ Veritabanı Bağlantısı Ayarları
-
-Eğer MySQL şifreniz varsayılandan farklıysa:
-
-📁 `src/main/java/.../database/DatabaseConnection.java` dosyasını açın:
-
-```java
-// Bu satırı bulun ve şifrenizi girin:
-private static final String DB_PASSWORD = getEnv("DB_PASSWORD", "sizin_sifreniz");
-```
-
----
-
-### 5️⃣ Uygulamayı Çalıştırma
+### Step 4: Build the Project
 
 ```bash
 # macOS / Linux
-./mvnw clean javafx:run
+./mvnw clean install
 
 # Windows
-mvnw.cmd clean javafx:run
-```
-
-🎉 **Tebrikler!** Uygulama başlatıldı.
-
----
-
-## 📖 Kullanım Kılavuzu
-
-### 🔐 Giriş Bilgileri
-
-| 👤 Kullanıcı Adı | 🔑 Şifre |
-|------------------|----------|
-| `yonetici` | `1234` |
-| `admin` | `admin123` |
-
----
-
-### 🏠 Ana Menü
-
-Giriş yaptıktan sonra üç ana bölüm görürsünüz:
-
-```
-┌────────────────────────────────────────────────┐
-│                  ANA MENÜ                      │
-├────────────────────────────────────────────────┤
-│                                                │
-│   ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-│   │    📦    │  │    🪑    │  │    📊    │    │
-│   │   STOK   │  │  MASALAR │  │  RAPOR   │    │
-│   └──────────┘  └──────────┘  └──────────┘    │
-│                                                │
-└────────────────────────────────────────────────┘
+mvnw.cmd clean install
 ```
 
 ---
 
-### 🪑 Masa İşlemleri
+## Configuration
 
-| Renk | Durum | Eylem |
-|------|-------|-------|
-| 🔵 Mavi | Boş masa | Tıklayarak sipariş ekranını açın |
-| 🔴 Kırmızı | Dolu masa | Mevcut siparişi görüntüleyin |
+### Database Settings
 
-**İşlemler:**
-- 🖱️ **Sol tık** → Sipariş ekranını aç
-- 🖱️ **Sağ tık** → Masayı sil (boşsa)
-- ➕ **Yeni Masa** → Otomatik numaralandırılmış masa ekle
+The application supports two configuration methods:
 
----
+<table>
+<tr>
+<th>Method</th>
+<th>Priority</th>
+<th>Use Case</th>
+</tr>
+<tr>
+<td><code>db.properties</code> file</td>
+<td>Primary</td>
+<td>Development and local deployment</td>
+</tr>
+<tr>
+<td>Environment Variables</td>
+<td>Fallback</td>
+<td>Production and containerized deployment</td>
+</tr>
+</table>
 
-### 🛒 Sipariş Alma
+### Environment Variables
 
-```
-1️⃣ Masaya tıklayın
-2️⃣ Ürünlere tıklayarak sipariş ekleyin
-3️⃣ Toplam otomatik hesaplanır
-4️⃣ "Hesabı Kapat" ile ödeme alın
-```
-
-| Buton | İşlev |
-|-------|-------|
-| 🗑️ Seçili Sil | Seçilen ürünü listeden çıkar |
-| 🧹 Tümünü Temizle | Tüm siparişi iptal et |
-| 💰 Hesabı Kapat | Ödeme al ve masayı boşalt |
-
----
-
-### 📦 Stok Yönetimi
-
-| İşlem | Nasıl Yapılır |
-|-------|---------------|
-| ➕ Ürün Ekle | "+" butonuna tıklayın |
-| ✏️ Stok Güncelle | Ürüne çift tıklayın |
-| 🗑️ Ürün Sil | Ürünü seçip "Sil" butonuna tıklayın |
+| Variable | Default Value |
+|:---------|:--------------|
+| `DB_HOST` | localhost |
+| `DB_PORT` | 3306 |
+| `DB_NAME` | bahar_db |
+| `DB_USER` | root |
+| `DB_PASSWORD` | (empty) |
 
 ---
 
-### 📊 Z Raporu
+## Running the Application
 
-Gün sonu raporu almak için:
+### From IDE
 
+1. Import as Maven project
+2. Run the `Launcher` class:
+   ```
+   src/main/java/com/baharkiraathanesi/kiraathane/Launcher.java
+   ```
+
+### From Command Line
+
+```bash
+# Using Maven wrapper
+./mvnw javafx:run
+
+# Using built JAR
+java -jar target/Kiraathane-1.0-SNAPSHOT.jar
 ```
-1️⃣ "Z Raporu" ekranına gidin
-2️⃣ Günlük satışları inceleyin
-3️⃣ "Z Raporu Al" butonuna tıklayın
-4️⃣ PDF dosyasını kaydedin
-```
 
-> ⚠️ **Önemli:** Z raporu almadan önce tüm açık hesapları kapatmalısınız!
+### Default Credentials
+
+| Username | Password | Role |
+|:---------|:---------|:-----|
+| `admin` | `admin` | Administrator |
 
 ---
 
-## 🔧 Sorun Giderme
+## Project Structure
+
+```
+project-repository-ergul-/
+│
+├── src/
+│   └── main/
+│       ├── java/com/baharkiraathanesi/kiraathane/
+│       │   ├── dao/                    # Data Access Objects
+│       │   │   ├── OrderDAO.java
+│       │   │   ├── ProductDAO.java
+│       │   │   ├── ReportDAO.java
+│       │   │   ├── TableDAO.java
+│       │   │   └── UserDAO.java
+│       │   │
+│       │   ├── database/               # Database utilities
+│       │   │   ├── DatabaseConnection.java
+│       │   │   └── DatabaseUpdater.java
+│       │   │
+│       │   ├── model/                  # Entity classes
+│       │   │   ├── Order.java
+│       │   │   ├── OrderItem.java
+│       │   │   ├── Product.java
+│       │   │   ├── Report.java
+│       │   │   └── Table.java
+│       │   │
+│       │   └── *Controller.java        # JavaFX controllers
+│       │
+│       └── resources/
+│           ├── db/                     # SQL scripts
+│           ├── images/                 # Icons and images
+│           └── com/.../                # FXML views and CSS
+│
+├── pom.xml                             # Maven configuration
+└── README.md                           # This file
+```
+
+---
+
+## Troubleshooting
 
 <details>
-<summary>❌ <strong>Uygulama açılmıyor</strong></summary>
+<summary><strong>Database Connection Failed</strong></summary>
 
-1. Java kurulumunu kontrol edin: `java -version`
-2. MySQL'in çalıştığından emin olun
-3. `setup_database.sql` dosyasını tekrar çalıştırın
+1. Verify MySQL is running:
+   ```bash
+   mysql -u root -p
+   ```
+2. Check credentials in `db.properties`
+3. Ensure database exists:
+   ```sql
+   SHOW DATABASES;
+   ```
+4. Check network connectivity to database host
 
 </details>
 
 <details>
-<summary>❌ <strong>Veritabanı bağlantı hatası</strong></summary>
+<summary><strong>Application Won't Start</strong></summary>
 
-1. MySQL servisinin çalıştığını kontrol edin
-2. `DatabaseConnection.java` dosyasındaki şifreyi kontrol edin
-3. Veritabanı adının `bahar_db` olduğundan emin olun
+1. Verify Java version (must be 21+):
+   ```bash
+   java -version
+   ```
+2. Download dependencies:
+   ```bash
+   ./mvnw dependency:resolve
+   ```
+3. Check console for specific error messages
 
 </details>
 
 <details>
-<summary>❌ <strong>Ürünler görünmüyor</strong></summary>
+<summary><strong>Missing Fonts in PDF</strong></summary>
 
-MySQL'de kontrol edin:
-```sql
-USE bahar_db;
-SELECT * FROM products;
+The Z-Report uses Arial fonts by default. If unavailable, it falls back to Helvetica.
+
+For full Turkish character support, ensure Arial fonts are installed:
+- **Windows:** Usually pre-installed
+- **macOS:** Usually pre-installed
+- **Linux:** Install `ttf-mscorefonts-installer`
+
+</details>
+
+<details>
+<summary><strong>JavaFX Module Errors</strong></summary>
+
+Ensure `module-info.java` is properly configured and JavaFX dependencies are in `pom.xml`.
+
+```bash
+./mvnw clean install -U
 ```
-
-Boşsa, `setup_database.sql` tekrar çalıştırın.
 
 </details>
 
 ---
 
-## 🛠️ Teknik Bilgiler
+## License
 
-| Bileşen | Teknoloji |
-|---------|-----------|
-| 💻 Programlama Dili | Java 21 |
-| 🎨 UI Framework | JavaFX 21 |
-| 🗄️ Veritabanı | MySQL 8.x |
-| 📄 PDF Oluşturma | Apache PDFBox 3.0 |
-| 🔧 Build Tool | Maven |
-
----
-
-## 📞 Destek
-
-Sorularınız veya önerileriniz için:
-
-- 📧 İletişim: [Proje sahibine ulaşın]
-- 🐛 Hata Bildirimi: GitHub Issues kullanın
+This project is proprietary software. All rights reserved.
 
 ---
 
 <p align="center">
-  <sub>☕ Bahar Kıraathanesi Yönetim Sistemi ile yapıldı</sub>
+  <strong>Bahar Kiraathanesi</strong><br/>
+  <sub>Built with Java and JavaFX</sub>
 </p>
 
 <p align="center">
-  <sub>© 2025 - Tüm hakları saklıdır</sub>
+  <sub>For support, refer to <code>CREDENTIALS_GUIDE.txt</code></sub>
 </p>
 

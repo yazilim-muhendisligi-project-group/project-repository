@@ -1,28 +1,66 @@
 package com.baharkiraathanesi.kiraathane.database;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DatabaseConnection {
 
     private static final Logger LOGGER = Logger.getLogger(DatabaseConnection.class.getName());
 
-    private static final String DB_HOST = getEnv("DB_HOST", "localhost");
-    private static final String DB_PORT = getEnv("DB_PORT", "3306");
-    private static final String DB_NAME = getEnv("DB_NAME", "bahar_db");
-    private static final String DB_USER = getEnv("DB_USER", "root");
-    private static final String DB_PASSWORD = getEnv("DB_PASSWORD", "selamveduaile");
-
-    private static final String DB_URL = String.format(
-        "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8",
-        DB_HOST, DB_PORT, DB_NAME
-    );
+    private static String dbHost;
+    private static String dbPort;
+    private static String dbName;
+    private static String dbUser;
+    private static String dbPassword;
+    private static String dbUrl;
 
     private static Connection connection = null;
 
+    static {
+        loadProperties();
+    }
+
     private DatabaseConnection() {
+    }
+
+    private static void loadProperties() {
+        Properties props = new Properties();
+        try (InputStream input = DatabaseConnection.class.getClassLoader().getResourceAsStream("db.properties")) {
+            if (input != null) {
+                props.load(input);
+                dbHost = props.getProperty("db.host", "localhost");
+                dbPort = props.getProperty("db.port", "3306");
+                dbName = props.getProperty("db.name", "bahar_db");
+                dbUser = props.getProperty("db.user", "root");
+                dbPassword = props.getProperty("db.password", "");
+                LOGGER.info("db.properties dosyasindan ayarlar yuklendi");
+            } else {
+                loadFromEnvironmentVariables();
+                LOGGER.warning("db.properties bulunamadi, ortam degiskenleri kullaniliyor");
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "db.properties okunamadi, ortam degiskenleri kullaniliyor", e);
+            loadFromEnvironmentVariables();
+        }
+
+        dbUrl = String.format(
+            "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8",
+            dbHost, dbPort, dbName
+        );
+    }
+
+    private static void loadFromEnvironmentVariables() {
+        dbHost = getEnv("DB_HOST", "localhost");
+        dbPort = getEnv("DB_PORT", "3306");
+        dbName = getEnv("DB_NAME", "bahar_db");
+        dbUser = getEnv("DB_USER", "root");
+        dbPassword = getEnv("DB_PASSWORD", "");
     }
 
     private static String getEnv(String key, String defaultValue) {
@@ -34,38 +72,41 @@ public class DatabaseConnection {
         try {
             if (connection == null || connection.isClosed()) {
                 Class.forName("com.mysql.cj.jdbc.Driver");
-                connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                LOGGER.info("Veritabanı bağlantısı başarılı: " + DB_NAME);
+                connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+                LOGGER.info("Veritabani baglantisi basarili: " + dbName);
             }
             return connection;
 
         } catch (ClassNotFoundException e) {
-            LOGGER.info("MySQL Driver bulunamadı! pom.xml'i kontrol edin.");
+            LOGGER.log(Level.SEVERE, "MySQL Driver bulunamadi. pom.xml kontrol edin.", e);
             return null;
 
         } catch (SQLException e) {
-            LOGGER.info("Veritabanı bağlantı hatası: " + e.getMessage());
-            System.out.println("\nVERİTABANI BAĞLANTISI KURULAMADI!");
-            System.out.println("Hata: " + e.getMessage());
-            System.out.println("\nÇÖZÜM ADIMLARI:");
-            System.out.println("1. MySQL'in çalıştığını kontrol edin");
-            System.out.println("2. Veritabanını kurun: /usr/local/mysql/bin/mysql -u root -p < setup_database.sql");
-            System.out.println("3. Bağlantı bilgilerini kontrol edin:");
-            System.out.println("   Host: " + DB_HOST);
-            System.out.println("   Port: " + DB_PORT);
-            System.out.println("   Database: " + DB_NAME);
-            System.out.println("   User: " + DB_USER);
+            LOGGER.log(Level.SEVERE, "Veritabani baglanti hatasi: " + e.getMessage(), e);
+            logConnectionHelp();
             return null;
         }
+    }
+
+    private static void logConnectionHelp() {
+        LOGGER.severe("VERITABANI BAGLANTISI KURULAMADI");
+        LOGGER.info("COZUM ADIMLARI:");
+        LOGGER.info("1. MySQL calistigini kontrol edin");
+        LOGGER.info("2. Veritabanini kurun: mysql -u root -p < setup_database.sql");
+        LOGGER.info("3. Baglanti bilgilerini kontrol edin:");
+        LOGGER.info("   Host: " + dbHost);
+        LOGGER.info("   Port: " + dbPort);
+        LOGGER.info("   Database: " + dbName);
+        LOGGER.info("   User: " + dbUser);
     }
 
     public static void closeConnection() {
         if (connection != null) {
             try {
                 connection.close();
-                LOGGER.info("Veritabanı bağlantısı kapatıldı");
+                LOGGER.info("Veritabani baglantisi kapatildi");
             } catch (SQLException e) {
-                LOGGER.info("Bağlantı kapatılırken hata oluştu: " + e.getMessage());
+                LOGGER.log(Level.WARNING, "Baglanti kapatilirken hata olustu", e);
             }
         }
     }
@@ -74,7 +115,9 @@ public class DatabaseConnection {
         try (Connection conn = getConnection()) {
             return conn != null && !conn.isClosed();
         } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, "Baglanti testi basarisiz", e);
             return false;
         }
     }
 }
+

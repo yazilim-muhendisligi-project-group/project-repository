@@ -13,12 +13,9 @@ import javafx.scene.layout.GridPane;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Stok yönetimi kontrolcüsü
- * Ürün ekleme, silme ve stok güncelleme işlemlerini yönetir
- */
 public class StockController {
 
     private static final Logger LOGGER = Logger.getLogger(StockController.class.getName());
@@ -45,9 +42,8 @@ public class StockController {
 
     @FXML
     public void initialize() {
-        System.out.println("=== StockController Başlatılıyor ===");
+        LOGGER.info("StockController baslatiliyor");
 
-        // Çift tıklama ile stok güncelleme
         stockTable.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2) {
                 Product selectedProduct = stockTable.getSelectionModel().getSelectedItem();
@@ -63,8 +59,8 @@ public class StockController {
     @FXML
     private void addNewProduct() {
         Dialog<Product> dialog = new Dialog<>();
-        dialog.setTitle("Yeni Ürün Ekle");
-        dialog.setHeaderText("Yeni Ürün Bilgilerini Girin");
+        dialog.setTitle("Yeni Urun Ekle");
+        dialog.setHeaderText("Yeni Urun Bilgilerini Girin");
 
         ButtonType addButtonType = new ButtonType("Ekle", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
@@ -74,58 +70,52 @@ public class StockController {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
 
-        // Ürün adı
         TextField nameField = new TextField();
-        nameField.setPromptText("Örn: Türk Kahvesi");
+        nameField.setPromptText("Orn: Turk Kahvesi");
 
-        // Ana kategori seçimi
         ComboBox<String> mainCategoryCombo = new ComboBox<>();
-        mainCategoryCombo.getItems().addAll("İçecek", "Yiyecek", "Tatlı", "Diğer");
-        mainCategoryCombo.setPromptText("Ana Kategori Seçin");
+        mainCategoryCombo.getItems().addAll("Icecek", "Yiyecek", "Tatli", "Diger");
+        mainCategoryCombo.setPromptText("Ana Kategori Secin");
 
-        // Alt kategori seçimi
         ComboBox<String> subCategoryCombo = new ComboBox<>();
-        subCategoryCombo.setPromptText("Önce ana kategori seçin");
+        subCategoryCombo.setPromptText("Once ana kategori secin");
         subCategoryCombo.setDisable(true);
 
-        // Ana kategori değişince alt kategorileri güncelle
         mainCategoryCombo.setOnAction(e -> {
             subCategoryCombo.getItems().clear();
             String selected = mainCategoryCombo.getValue();
 
-            if ("İçecek".equals(selected)) {
-                subCategoryCombo.getItems().addAll("Sıcak İçecek", "Soğuk İçecek", "Alkollü İçecek", "Alkolsüz İçecek");
+            if ("Icecek".equals(selected)) {
+                subCategoryCombo.getItems().addAll("Sicak Icecek", "Soguk Icecek", "Alkollu Icecek", "Alkolsuz Icecek");
             } else if ("Yiyecek".equals(selected)) {
-                subCategoryCombo.getItems().addAll("Ana Yemek", "Ara Sıcak", "Aperatif", "Salata");
-            } else if ("Tatlı".equals(selected)) {
-                subCategoryCombo.getItems().addAll("Sütlü Tatlı", "Şerbetli Tatlı", "Pasta", "Dondurma");
-            } else if ("Diğer".equals(selected)) {
-                subCategoryCombo.getItems().addAll("Sigara", "Nargile", "Diğer");
+                subCategoryCombo.getItems().addAll("Ana Yemek", "Ara Sicak", "Aperatif", "Salata");
+            } else if ("Tatli".equals(selected)) {
+                subCategoryCombo.getItems().addAll("Sutlu Tatli", "Serbetli Tatli", "Pasta", "Dondurma");
+            } else if ("Diger".equals(selected)) {
+                subCategoryCombo.getItems().addAll("Sigara", "Nargile", "Diger");
             }
 
             subCategoryCombo.setDisable(false);
-            subCategoryCombo.setPromptText("Alt Kategori Seçin");
+            subCategoryCombo.setPromptText("Alt Kategori Secin");
         });
 
-        // Detay kategori (opsiyonel)
         ComboBox<String> detailCategoryCombo = new ComboBox<>();
         detailCategoryCombo.setPromptText("Detay kategori (opsiyonel)");
         detailCategoryCombo.setDisable(true);
 
-        // Alt kategori değişince detay kategorileri güncelle
         subCategoryCombo.setOnAction(e -> {
             detailCategoryCombo.getItems().clear();
             String mainCat = mainCategoryCombo.getValue();
             String subCat = subCategoryCombo.getValue();
 
-            if ("İçecek".equals(mainCat) && "Sıcak İçecek".equals(subCat)) {
-                detailCategoryCombo.getItems().addAll("Kahve", "Çay", "Bitki Çayı", "Sıcak Çikolata");
+            if ("Icecek".equals(mainCat) && "Sicak Icecek".equals(subCat)) {
+                detailCategoryCombo.getItems().addAll("Kahve", "Cay", "Bitki Cayi", "Sicak Cikolata");
                 detailCategoryCombo.setDisable(false);
-            } else if ("İçecek".equals(mainCat) && "Soğuk İçecek".equals(subCat)) {
-                detailCategoryCombo.getItems().addAll("Meşrubat", "Meyve Suyu", "Smoothie", "Soğuk Kahve");
+            } else if ("Icecek".equals(mainCat) && "Soguk Icecek".equals(subCat)) {
+                detailCategoryCombo.getItems().addAll("Mesrubat", "Meyve Suyu", "Smoothie", "Soguk Kahve");
                 detailCategoryCombo.setDisable(false);
             } else if ("Yiyecek".equals(mainCat) && "Ana Yemek".equals(subCat)) {
-                detailCategoryCombo.getItems().addAll("Et Yemekleri", "Tavuk Yemekleri", "Balık", "Vejeteryan");
+                detailCategoryCombo.getItems().addAll("Et Yemekleri", "Tavuk Yemekleri", "Balik", "Vejeteryan");
                 detailCategoryCombo.setDisable(false);
             } else {
                 detailCategoryCombo.setDisable(true);
@@ -133,27 +123,23 @@ public class StockController {
             }
         });
 
-        // Fiyat
         TextField priceField = new TextField();
         priceField.setPromptText("Fiyat (TL)");
 
-        // Paket sayısı (YENİ SİSTEM)
         TextField packageField = new TextField();
-        packageField.setPromptText("Örn: 5 (paket)");
+        packageField.setPromptText("Orn: 5 (paket)");
         packageField.setText("1");
 
-        // Paket başına porsiyon (YENİ SİSTEM)
         TextField portionField = new TextField();
-        portionField.setPromptText("Örn: 200 (bardak/paket)");
+        portionField.setPromptText("Orn: 200 (bardak/paket)");
         portionField.setText("1");
 
-        // Birim seçimi
         ComboBox<String> unitCombo = new ComboBox<>();
         unitCombo.getItems().addAll("adet", "porsiyon", "fincan", "bardak", "tabak", "dilim", "kg", "gr");
-        unitCombo.setPromptText("Birim Seçin");
+        unitCombo.setPromptText("Birim Secin");
         unitCombo.setValue("adet");
 
-        grid.add(new Label("Ürün Adı:"), 0, 0);
+        grid.add(new Label("Urun Adi:"), 0, 0);
         grid.add(nameField, 1, 0);
         grid.add(new Label("Ana Kategori:"), 0, 1);
         grid.add(mainCategoryCombo, 1, 1);
@@ -163,9 +149,9 @@ public class StockController {
         grid.add(detailCategoryCombo, 1, 3);
         grid.add(new Label("Fiyat (TL):"), 0, 4);
         grid.add(priceField, 1, 4);
-        grid.add(new Label("Paket Sayısı:"), 0, 5);
+        grid.add(new Label("Paket Sayisi:"), 0, 5);
         grid.add(packageField, 1, 5);
-        grid.add(new Label("Paket Başına Porsiyon:"), 0, 6);
+        grid.add(new Label("Paket Basina Porsiyon:"), 0, 6);
         grid.add(portionField, 1, 6);
         grid.add(new Label("Birim:"), 0, 7);
         grid.add(unitCombo, 1, 7);
@@ -186,48 +172,38 @@ public class StockController {
                     String unit = unitCombo.getValue();
 
                     if (name.isEmpty() || mainCat == null || subCat == null || unit == null) {
-                        throw new IllegalArgumentException("Zorunlu alanlar doldurulmalıdır!");
+                        throw new IllegalArgumentException("Zorunlu alanlar doldurulmalidir!");
                     }
 
                     if (stockPackage <= 0 || portionsPerPackage <= 0) {
-                        throw new IllegalArgumentException("Paket ve porsiyon sayısı pozitif olmalıdır!");
+                        throw new IllegalArgumentException("Paket ve porsiyon sayisi pozitif olmalidir!");
                     }
 
-                    // Kategoriyi birleştir: "İçecek > Sıcak İçecek > Kahve"
                     String fullCategory = mainCat + " > " + subCat;
                     if (detailCat != null && !detailCat.isEmpty()) {
                         fullCategory += " > " + detailCat;
                     }
 
-                    // YENİ SİSTEM: 6 parametre (name, category, price, stockPackage, unit, portionsPerPackage)
                     boolean success = productDAO.addProduct(name, fullCategory, price, stockPackage, unit, portionsPerPackage);
 
                     if (success) {
                         int totalStock = stockPackage * portionsPerPackage;
-                        LOGGER.info("✅ Yeni ürün eklendi: " + name + " (" + fullCategory + ") - "
-                                + stockPackage + " paket × " + portionsPerPackage + " = " + totalStock + " " + unit);
+                        LOGGER.info("Yeni urun eklendi: " + name + " (" + fullCategory + ") - "
+                                + stockPackage + " paket x " + portionsPerPackage + " = " + totalStock + " " + unit);
                         loadStockData();
 
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("Başarılı");
-                        alert.setContentText("Ürün başarıyla eklendi!\n\n"
-                                + "Ürün: " + name + "\n"
+                        showAlert(Alert.AlertType.INFORMATION, "Basarili",
+                                "Urun basariyla eklendi!\n\n"
+                                + "Urun: " + name + "\n"
                                 + "Kategori: " + fullCategory + "\n"
-                                + "Stok: " + stockPackage + " paket × " + portionsPerPackage
+                                + "Stok: " + stockPackage + " paket x " + portionsPerPackage
                                 + " = " + totalStock + " " + unit);
-                        alert.showAndWait();
                     }
                 } catch (NumberFormatException e) {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Hata");
-                    alert.setContentText("Fiyat, paket sayısı ve porsiyon sayısı sayısal değer olmalıdır!");
-                    alert.showAndWait();
-                } catch (Exception e) {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Hata");
-                    alert.setContentText("Hata: " + e.getMessage());
-                    alert.showAndWait();
-                    LOGGER.info("❌ Ürün eklenirken hata: " + e.getMessage());
+                    showAlert(Alert.AlertType.ERROR, "Hata", "Fiyat, paket sayisi ve porsiyon sayisi sayisal deger olmalidir!");
+                } catch (IllegalArgumentException e) {
+                    showAlert(Alert.AlertType.ERROR, "Hata", e.getMessage());
+                    LOGGER.log(Level.WARNING, "Urun eklenirken hata", e);
                 }
             }
             return null;
@@ -241,95 +217,67 @@ public class StockController {
         Product selectedProduct = stockTable.getSelectionModel().getSelectedItem();
 
         if (selectedProduct == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Uyarı");
-            alert.setHeaderText("Ürün Seçilmedi");
-            alert.setContentText("Lütfen silmek istediğiniz ürünü seçin.");
-            alert.showAndWait();
+            showAlert(Alert.AlertType.WARNING, "Uyari", "Lutfen silmek istediginiz urunu secin.");
             return;
         }
 
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Ürün Sil");
-        confirmAlert.setHeaderText("Ürünü silmek istediğinize emin misiniz?");
-        confirmAlert.setContentText(selectedProduct.getName() + " silinecek. Bu işlem geri alınamaz!");
+        confirmAlert.setTitle("Urun Sil");
+        confirmAlert.setHeaderText("Urunu silmek istediginize emin misiniz?");
+        confirmAlert.setContentText(selectedProduct.getName() + " silinecek. Bu islem geri alinamaz!");
 
         Optional<ButtonType> result = confirmAlert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             boolean success = productDAO.deleteProduct(selectedProduct.getId());
 
             if (success) {
-                System.out.println("✅ Ürün silindi: " + selectedProduct.getName());
+                LOGGER.info("Urun silindi: " + selectedProduct.getName());
                 loadStockData();
-
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Başarılı");
-                alert.setContentText("Ürün başarıyla silindi!");
-                alert.showAndWait();
+                showAlert(Alert.AlertType.INFORMATION, "Basarili", "Urun basariyla silindi!");
             } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Hata");
-                alert.setContentText("Ürün silinirken bir hata oluştu!");
-                alert.showAndWait();
+                showAlert(Alert.AlertType.ERROR, "Hata", "Urun silinirken bir hata olustu!");
             }
         }
     }
 
-    // GÜNCELLENEN METOT: Stok güncellemesi artık PAKET üzerinden yapılıyor
     private void updateProductStock(Product product) {
-        // DİKKAT: Burada getStockPackage() kullanarak mevcut PAKET sayısını getiriyoruz
-        // (Eskiden getStockQty() idi, bu da toplam adedi getiriyordu, çarpma hatası oradan geliyordu)
         TextInputDialog dialog = new TextInputDialog(String.valueOf(product.getStockPackage()));
 
-        dialog.setTitle("Paket Sayısı Güncelle");
+        dialog.setTitle("Paket Sayisi Guncelle");
         dialog.setHeaderText(product.getName() + " - Stok Durumu");
-        // Kullanıcıya ne girmesi gerektiğini net bir şekilde söylüyoruz
-        dialog.setContentText("Mevcut Paket Sayısı:\n(Dikkat: Girdiğiniz sayı paket sayısı olarak işlenecektir!)");
+        dialog.setContentText("Mevcut Paket Sayisi:\n(Dikkat: Girdiginiz sayi paket sayisi olarak islenecektir!)");
 
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(newStock -> {
             try {
                 int stockPackageAmount = Integer.parseInt(newStock.trim());
                 if (stockPackageAmount < 0) {
-                    throw new IllegalArgumentException("Paket sayısı negatif olamaz!");
+                    throw new IllegalArgumentException("Paket sayisi negatif olamaz!");
                 }
 
-                // Girilen PAKET sayısını veritabanına gönderiyoruz
-                // Veritabanı bunu (Paket Sayısı x Paket İçi Adet) olarak çarpıp kaydedecek.
                 boolean success = productDAO.updateProductStock(product.getId(), stockPackageAmount);
 
                 if (success) {
                     int totalUnits = stockPackageAmount * product.getPortionsPerPackage();
-                    System.out.println("✅ Stok güncellendi: " + stockPackageAmount + " paket (" + totalUnits + " adet)");
+                    LOGGER.info("Stok guncellendi: " + stockPackageAmount + " paket (" + totalUnits + " adet)");
                     loadStockData();
 
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Başarılı");
-                    alert.setHeaderText("Stok Güncellendi");
-                    alert.setContentText(
+                    showAlert(Alert.AlertType.INFORMATION, "Stok Guncellendi",
                             "Yeni Stok Durumu:\n" +
-                                    stockPackageAmount + " Paket\n" +
-                                    "Toplam: " + totalUnits + " " + product.getUnit()
-                    );
-                    alert.showAndWait();
+                            stockPackageAmount + " Paket\n" +
+                            "Toplam: " + totalUnits + " " + product.getUnit());
                 }
             } catch (NumberFormatException e) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Hata");
-                alert.setContentText("Lütfen geçerli bir sayı girin!");
-                alert.showAndWait();
-            } catch (Exception e) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Hata");
-                alert.setContentText("Hata: " + e.getMessage());
-                alert.showAndWait();
+                showAlert(Alert.AlertType.ERROR, "Hata", "Lutfen gecerli bir sayi girin!");
+            } catch (IllegalArgumentException e) {
+                showAlert(Alert.AlertType.ERROR, "Hata", e.getMessage());
             }
         });
     }
 
     private void loadStockData() {
         try {
-            LOGGER.info("Stok verileri yükleniyor...");
+            LOGGER.info("Stok verileri yukleniyor...");
 
             productNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
             categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
@@ -340,24 +288,32 @@ public class StockController {
             List<Product> productList = productDAO.getAllProducts();
 
             if (productList != null) {
-                LOGGER.info(productList.size() + " ürün bulundu");
-
+                LOGGER.info(productList.size() + " urun bulundu");
                 ObservableList<Product> products = FXCollections.observableArrayList(productList);
-
                 stockTable.setItems(products);
-                LOGGER.info("Stok tablosu başarıyla dolduruldu!");
+                LOGGER.info("Stok tablosu basariyla dolduruldu");
             } else {
-                LOGGER.info("Ürün listesi NULL!");
+                LOGGER.warning("Urun listesi bos");
                 stockTable.setItems(FXCollections.observableArrayList());
             }
         } catch (Exception e) {
-            LOGGER.info("StockController Hatası: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Stok verileri yuklenirken hata", e);
+            showAlert(Alert.AlertType.ERROR, "Hata", "Stok verileri yuklenirken bir hata olustu.");
         }
     }
 
     @FXML
     public void goBackToMenu() {
-        System.out.println("Ana menüye gidiliyor...");
+        LOGGER.info("Ana menuye gidiliyor...");
         HelloApplication.changeScene("main-menu.fxml");
     }
+
+    private void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 }
+
