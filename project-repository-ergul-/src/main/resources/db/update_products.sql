@@ -10,7 +10,7 @@ ADD COLUMN IF NOT EXISTS portions_per_package INT DEFAULT 1 COMMENT 'Paket baş�
 ADD COLUMN IF NOT EXISTS stock_display VARCHAR(100) DEFAULT NULL COMMENT 'Stok gösterim metni';
 
 -- Yönetici kullanıcı ekle (eğer yoksa)
-INSERT IGNORE INTO users (username, password) VALUES ('yonetici', '1234');
+INSERT IGNORE INTO users (username, password) VALUES ('yonetici', 'YOUR_PASSWORD_HERE');
 
 -- Mevcut ürünleri temizle (isteğe bağlı)
 DELETE FROM products;

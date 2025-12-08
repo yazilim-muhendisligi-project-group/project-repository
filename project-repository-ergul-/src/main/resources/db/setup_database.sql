@@ -16,12 +16,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Varsayılan kullanıcıları ekle (varsa güncelle)
 INSERT INTO users (username, password, role)
-VALUES ('yonetici', '1234', 'admin')
-ON DUPLICATE KEY UPDATE password='1234', role='admin';
+VALUES ('yonetici', 'YOUR_PASSWORD_HERE', 'admin')
+ON DUPLICATE KEY UPDATE password='YOUR_PASSWORD_HERE', role='admin';
 
 INSERT INTO users (username, password, role)
-VALUES ('admin', 'admin123', 'admin')
-ON DUPLICATE KEY UPDATE password='admin123', role='admin';
+VALUES ('admin', 'YOUR_PASSWORD_HERE', 'admin')
+ON DUPLICATE KEY UPDATE password='YOUR_PASSWORD_HERE', role='admin';
 
 -- 2. PRODUCTS Tablosu
 CREATE TABLE IF NOT EXISTS products (
