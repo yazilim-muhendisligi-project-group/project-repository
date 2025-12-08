@@ -16,10 +16,15 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TablesController {
 
-    @FXML private FlowPane tablesContainer;
+    private static final Logger LOGGER = Logger.getLogger(TablesController.class.getName());
+
+    @FXML
+    private FlowPane tablesContainer;
 
     @FXML
     public void initialize() {
@@ -47,6 +52,7 @@ public class TablesController {
                         maxNumber = num;
                     }
                 } catch (NumberFormatException e) {
+                    LOGGER.fine("Masa numarasi parse edilemedi: " + name);
                 }
             }
         }
@@ -54,21 +60,16 @@ public class TablesController {
         boolean success = tableDAO.addTable(newTableName);
 
         if (success) {
-            System.out.println("Otomatik masa eklendi: " + newTableName);
+            LOGGER.info("Otomatik masa eklendi: " + newTableName);
             refreshTables();
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Başarılı");
+            alert.setTitle("Basarili");
             alert.setHeaderText(null);
-            alert.setContentText(newTableName + " başarıyla oluşturuldu.");
-
+            alert.setContentText(newTableName + " basariyla olusturuldu.");
             alert.showAndWait();
         } else {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Hata");
-            alert.setHeaderText(null);
-            alert.setContentText("Masa eklenirken bir hata oluştu!");
-            alert.showAndWait();
+            showErrorAlert("Masa eklenirken bir hata olustu!");
         }
     }
 
@@ -79,8 +80,7 @@ public class TablesController {
 
         for (Table t : tables) {
             String color = t.isOccupied() ? "#D32F2F" : "#2196F3";
-
-            String statusText = t.isOccupied() ? "\n(DOLU)" : "\n(BOŞ)";
+            String statusText = t.isOccupied() ? "\n(DOLU)" : "\n(BOS)";
 
             Button btn = new Button(t.getName() + statusText);
             btn.setPrefSize(120, 80);
@@ -102,17 +102,17 @@ public class TablesController {
     private void deleteTable(int tableId, String tableName, boolean isOccupied) {
         if (isOccupied) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Uyarı");
+            alert.setTitle("Uyari");
             alert.setHeaderText("Masa Dolu!");
-            alert.setContentText("Açık siparişi olan masa silinemez. Önce hesabı kapatın.");
+            alert.setContentText("Acik siparisi olan masa silinemez. Once hesabi kapatin.");
             alert.showAndWait();
             return;
         }
 
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
         confirmAlert.setTitle("Masa Sil");
-        confirmAlert.setHeaderText("Masayı silmek istediğinize emin misiniz?");
-        confirmAlert.setContentText(tableName + " silinecek. Bu işlem geri alınamaz!");
+        confirmAlert.setHeaderText("Masayi silmek istediginize emin misiniz?");
+        confirmAlert.setContentText(tableName + " silinecek. Bu islem geri alinamaz!");
 
         Optional<ButtonType> result = confirmAlert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -120,14 +120,10 @@ public class TablesController {
             boolean success = tableDAO.deleteTable(tableId);
 
             if (success) {
-                System.out.println("Masa silindi: " + tableName);
+                LOGGER.info("Masa silindi: " + tableName);
                 refreshTables();
             } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Hata");
-                alert.setHeaderText(null);
-                alert.setContentText("Masa silinirken bir hata oluştu!");
-                alert.showAndWait();
+                showErrorAlert("Masa silinirken bir hata olustu!");
             }
         }
     }
@@ -144,7 +140,17 @@ public class TablesController {
             stage.setScene(scene);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Siparis ekrani acilamadi", e);
+            showErrorAlert("Siparis ekrani acilamadi. Lutfen tekrar deneyin.");
         }
     }
+
+    private void showErrorAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Hata");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 }
+

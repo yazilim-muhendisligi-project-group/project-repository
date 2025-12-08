@@ -2,23 +2,28 @@ package com.baharkiraathanesi.kiraathane;
 
 import javafx.fxml.FXML;
 
+import java.util.logging.Logger;
+
 public class MainMenuController {
+
+    private static final Logger LOGGER = Logger.getLogger(MainMenuController.class.getName());
 
     @FXML
     private void goToStock() {
-        System.out.println("Stok ekranına gidiliyor...");
+        LOGGER.info("Stok ekranina gidiliyor...");
         HelloApplication.changeScene("stock-view.fxml");
     }
 
     @FXML
     private void goToTables() {
-        System.out.println("Masalar ekranına gidiliyor...");
+        LOGGER.info("Masalar ekranina gidiliyor...");
         HelloApplication.changeScene("tables-view.fxml");
     }
 
     @FXML
     private void goToReport() {
-        System.out.println("Z Raporu ekranına gidiliyor...");
+        LOGGER.info("Z Raporu ekranina gidiliyor...");
         HelloApplication.changeScene("report-view.fxml");
     }
 }
+

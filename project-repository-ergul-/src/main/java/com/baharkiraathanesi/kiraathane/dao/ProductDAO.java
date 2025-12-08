@@ -2,6 +2,7 @@ package com.baharkiraathanesi.kiraathane.dao;
 
 import com.baharkiraathanesi.kiraathane.database.DatabaseConnection;
 import com.baharkiraathanesi.kiraathane.model.Product;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,11 +18,11 @@ public class ProductDAO {
         final String SQL = "SELECT * FROM products ORDER BY name";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(SQL)) {
+             PreparedStatement stmt = conn.prepareStatement(SQL);
+             ResultSet rs = stmt.executeQuery()) {
 
             if (conn == null) {
-                LOGGER.info("ProductDAO: Veritabanı bağlantısı kurulamadı!");
+                LOGGER.warning("Veritabani baglantisi kurulamadi");
                 return productList;
             }
 
@@ -41,10 +42,10 @@ public class ProductDAO {
                 productList.add(product);
             }
 
-            LOGGER.info(productList.size() + " ürün getirildi");
+            LOGGER.info(productList.size() + " urun getirildi");
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Ürünler getirilirken hata oluştu", e);
+            LOGGER.log(Level.SEVERE, "Urunler getirilirken hata olustu", e);
         }
 
         return productList;
@@ -53,7 +54,7 @@ public class ProductDAO {
     public boolean addProduct(String name, String category, double price, int stockPackage,
                               String unit, int portionsPerPackage) {
         if (name == null || name.trim().isEmpty()) {
-            LOGGER.info("Ürün adı boş olamaz!");
+            LOGGER.warning("Urun adi bos olamaz");
             return false;
         }
 
@@ -81,12 +82,12 @@ public class ProductDAO {
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
-                LOGGER.info("Ürün eklendi: " + name);
+                LOGGER.info("Urun eklendi: " + name);
                 return true;
             }
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Ürün eklenirken hata: " + name, e);
+            LOGGER.log(Level.SEVERE, "Urun eklenirken hata: " + name, e);
         }
 
         return false;
@@ -106,12 +107,12 @@ public class ProductDAO {
             int affectedRows = stmt.executeUpdate();
 
             if (affectedRows > 0) {
-                LOGGER.info("Ürün silindi: ID=" + productId);
+                LOGGER.info("Urun silindi: ID=" + productId);
                 return true;
             }
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Ürün silinirken hata: ID=" + productId, e);
+            LOGGER.log(Level.SEVERE, "Urun silinirken hata: ID=" + productId, e);
         }
 
         return false;
@@ -130,30 +131,30 @@ public class ProductDAO {
             }
 
             selectStmt.setInt(1, productId);
-            ResultSet rs = selectStmt.executeQuery();
+            try (ResultSet rs = selectStmt.executeQuery()) {
+                if (rs.next()) {
+                    int portionsPerPackage = rs.getInt("portions_per_package");
+                    String name = rs.getString("name");
+                    int newStockQty = newStockPackage * portionsPerPackage;
+                    String stockDisplay = newStockPackage + " paket (" + newStockQty + " porsiyon)";
 
-            if (rs.next()) {
-                int portionsPerPackage = rs.getInt("portions_per_package");
-                String name = rs.getString("name");
-                int newStockQty = newStockPackage * portionsPerPackage;
-                String stockDisplay = newStockPackage + " paket (" + newStockQty + " porsiyon)";
+                    try (PreparedStatement updateStmt = conn.prepareStatement(UPDATE_SQL)) {
+                        updateStmt.setInt(1, newStockPackage);
+                        updateStmt.setInt(2, newStockQty);
+                        updateStmt.setString(3, stockDisplay);
+                        updateStmt.setInt(4, productId);
 
-                try (PreparedStatement updateStmt = conn.prepareStatement(UPDATE_SQL)) {
-                    updateStmt.setInt(1, newStockPackage);
-                    updateStmt.setInt(2, newStockQty);
-                    updateStmt.setString(3, stockDisplay);
-                    updateStmt.setInt(4, productId);
-
-                    int affectedRows = updateStmt.executeUpdate();
-                    if (affectedRows > 0) {
-                        LOGGER.info("Stok güncellendi: " + name + " -> " + newStockPackage + " paket");
-                        return true;
+                        int affectedRows = updateStmt.executeUpdate();
+                        if (affectedRows > 0) {
+                            LOGGER.info("Stok guncellendi: " + name + " -> " + newStockPackage + " paket");
+                            return true;
+                        }
                     }
                 }
             }
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Stok güncellenirken hata: ID=" + productId, e);
+            LOGGER.log(Level.SEVERE, "Stok guncellenirken hata: ID=" + productId, e);
         }
 
         return false;
@@ -174,12 +175,12 @@ public class ProductDAO {
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
-                LOGGER.info("Fiyat güncellendi: ID=" + productId + " -> " + newPrice + " TL");
+                LOGGER.info("Fiyat guncellendi: ID=" + productId + " -> " + newPrice + " TL");
                 return true;
             }
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Fiyat güncellenirken hata: ID=" + productId, e);
+            LOGGER.log(Level.SEVERE, "Fiyat guncellenirken hata: ID=" + productId, e);
         }
 
         return false;
@@ -196,27 +197,28 @@ public class ProductDAO {
             }
 
             stmt.setInt(1, productId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return new Product(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getString("category"),
-                    rs.getDouble("price"),
-                    rs.getInt("stock_qty"),
-                    rs.getString("unit"),
-                    rs.getInt("critical_level"),
-                    rs.getInt("stock_package"),
-                    rs.getInt("portions_per_package"),
-                    rs.getString("stock_display")
-                );
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Product(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("category"),
+                        rs.getDouble("price"),
+                        rs.getInt("stock_qty"),
+                        rs.getString("unit"),
+                        rs.getInt("critical_level"),
+                        rs.getInt("stock_package"),
+                        rs.getInt("portions_per_package"),
+                        rs.getString("stock_display")
+                    );
+                }
             }
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Ürün getirilirken hata: ID=" + productId, e);
+            LOGGER.log(Level.SEVERE, "Urun getirilirken hata: ID=" + productId, e);
         }
 
         return null;
     }
 }
+
