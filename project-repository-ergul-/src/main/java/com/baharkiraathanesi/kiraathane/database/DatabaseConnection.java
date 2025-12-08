@@ -1,28 +1,66 @@
 package com.baharkiraathanesi.kiraathane.database;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 public class DatabaseConnection {
 
     private static final Logger LOGGER = Logger.getLogger(DatabaseConnection.class.getName());
 
-    private static final String DB_HOST = getEnv("DB_HOST", "localhost");
-    private static final String DB_PORT = getEnv("DB_PORT", "3306");
-    private static final String DB_NAME = getEnv("DB_NAME", "bahar_db");
-    private static final String DB_USER = getEnv("DB_USER", "root");
-    private static final String DB_PASSWORD = getEnv("DB_PASSWORD", "");
-
-    private static final String DB_URL = String.format(
-        "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8",
-        DB_HOST, DB_PORT, DB_NAME
-    );
+    private static String DB_HOST;
+    private static String DB_PORT;
+    private static String DB_NAME;
+    private static String DB_USER;
+    private static String DB_PASSWORD;
+    private static String DB_URL;
 
     private static Connection connection = null;
 
+    static {
+        loadProperties();
+    }
+
     private DatabaseConnection() {
+    }
+
+    private static void loadProperties() {
+        Properties props = new Properties();
+        try (InputStream input = DatabaseConnection.class.getClassLoader().getResourceAsStream("db.properties")) {
+            if (input != null) {
+                props.load(input);
+                DB_HOST = props.getProperty("db.host", "localhost");
+                DB_PORT = props.getProperty("db.port", "3306");
+                DB_NAME = props.getProperty("db.name", "bahar_db");
+                DB_USER = props.getProperty("db.user", "root");
+                DB_PASSWORD = props.getProperty("db.password", "");
+                LOGGER.info("db.properties dosyasından ayarlar yüklendi");
+            } else {
+                // Fallback to environment variables
+                DB_HOST = getEnv("DB_HOST", "localhost");
+                DB_PORT = getEnv("DB_PORT", "3306");
+                DB_NAME = getEnv("DB_NAME", "bahar_db");
+                DB_USER = getEnv("DB_USER", "root");
+                DB_PASSWORD = getEnv("DB_PASSWORD", "");
+                LOGGER.warning("db.properties bulunamadı, ortam değişkenleri kullanılıyor");
+            }
+        } catch (IOException e) {
+            LOGGER.warning("db.properties okunamadı: " + e.getMessage());
+            DB_HOST = getEnv("DB_HOST", "localhost");
+            DB_PORT = getEnv("DB_PORT", "3306");
+            DB_NAME = getEnv("DB_NAME", "bahar_db");
+            DB_USER = getEnv("DB_USER", "root");
+            DB_PASSWORD = getEnv("DB_PASSWORD", "");
+        }
+
+        DB_URL = String.format(
+            "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8",
+            DB_HOST, DB_PORT, DB_NAME
+        );
     }
 
     private static String getEnv(String key, String defaultValue) {

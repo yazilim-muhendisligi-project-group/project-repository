@@ -26,6 +26,8 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 // DÜZELTME: Standart fontlar yerine özel font yükleyicisi eklendi
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 
 import java.io.File;
 import java.io.IOException;
@@ -144,11 +146,40 @@ public class ReportController {
             PDFont boldFont;
 
             try {
-                normalFont = PDType0Font.load(document, new File("C:/Windows/Fonts/arial.ttf"));
-                boldFont = PDType0Font.load(document, new File("C:/Windows/Fonts/arialbd.ttf"));
+                String os = System.getProperty("os.name").toLowerCase();
+                String normalFontPath;
+                String boldFontPath;
+
+                if (os.contains("mac")) {
+                    // macOS font yolları
+                    normalFontPath = "/System/Library/Fonts/Supplemental/Arial.ttf";
+                    boldFontPath = "/System/Library/Fonts/Supplemental/Arial Bold.ttf";
+                } else if (os.contains("win")) {
+                    // Windows font yolları
+                    normalFontPath = "C:/Windows/Fonts/arial.ttf";
+                    boldFontPath = "C:/Windows/Fonts/arialbd.ttf";
+                } else {
+                    // Linux font yolları
+                    normalFontPath = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf";
+                    boldFontPath = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf";
+                }
+
+                File normalFontFile = new File(normalFontPath);
+                File boldFontFile = new File(boldFontPath);
+
+                if (normalFontFile.exists() && boldFontFile.exists()) {
+                    normalFont = PDType0Font.load(document, normalFontFile);
+                    boldFont = PDType0Font.load(document, boldFontFile);
+                } else {
+                    // Helvetica fallback (Türkçe karakterler desteklenmez)
+                    System.err.println("Arial fontu bulunamadı, Helvetica kullanılıyor (Türkçe karakter sorunu olabilir)");
+                    normalFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+                    boldFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+                }
             } catch (IOException e) {
-                System.err.println("Arial fontu yüklenemedi, standart font deneniyor (Türkçe karakter hatası verebilir!)");
-                throw new RuntimeException("Font yükleme hatası: C:/Windows/Fonts/arial.ttf bulunamadı.");
+                System.err.println("Font yüklenemedi, Helvetica kullanılıyor: " + e.getMessage());
+                normalFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+                boldFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
             }
 
             // Başlık

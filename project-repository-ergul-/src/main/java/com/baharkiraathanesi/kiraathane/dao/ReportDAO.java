@@ -74,7 +74,7 @@ public class ReportDAO {
         // Ödenmiş siparişlerin aylık toplam cirosunu ve sipariş sayısını getir (Son 12 ayı getirmek daha mantıklı olabilir, ancak şimdilik tüm ayları getiriyoruz.)
         String sql = "SELECT DATE_FORMAT(created_at, '%Y-%m-01') AS report_date, SUM(total_amount) AS total_revenue, COUNT(*) AS total_orders " +
                 "FROM orders WHERE is_paid = TRUE " +
-                "GROUP BY DATE_FORMAT(created_at, '%Y-%m') " +
+                "GROUP BY DATE_FORMAT(created_at, '%Y-%m-01') " +
                 "ORDER BY report_date DESC";
 
         try (Connection conn = DatabaseConnection.getConnection();
