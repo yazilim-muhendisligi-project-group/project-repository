@@ -13,7 +13,7 @@ public class DatabaseConnection {
     private static final String DB_PORT = getEnv("DB_PORT", "3306");
     private static final String DB_NAME = getEnv("DB_NAME", "bahar_db");
     private static final String DB_USER = getEnv("DB_USER", "root");
-    private static final String DB_PASSWORD = getEnv("DB_PASSWORD", "selamveduaile");
+    private static final String DB_PASSWORD = getEnv("DB_PASSWORD", "");
 
     private static final String DB_URL = String.format(
         "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8",
