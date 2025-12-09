@@ -15,7 +15,7 @@ public class TableDAO {
 
     public List<Table> getAllTables() {
         List<Table> tableList = new ArrayList<>();
-        final String SQL = "SELECT * FROM tables WHERE is_deleted = FALSE ORDER BY id";
+        final String SQL = "SELECT * FROM tables ORDER BY id";
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
