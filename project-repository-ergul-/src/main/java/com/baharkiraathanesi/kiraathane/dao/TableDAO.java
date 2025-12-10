@@ -69,7 +69,7 @@ public class TableDAO {
             return false;
         }
 
-        final String SQL = "INSERT INTO tables (name, is_occupied, is_deleted) VALUES (?, FALSE, FALSE)";
+        final String SQL = "INSERT INTO tables (name, is_occupied) VALUES (?, FALSE)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL)) {
@@ -92,7 +92,7 @@ public class TableDAO {
     }
 
     public boolean deleteTable(int tableId) {
-        final String SQL = "UPDATE tables SET is_deleted = TRUE WHERE id = ?";
+        final String SQL = "DELETE FROM tables WHERE id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL)) {
@@ -139,7 +139,7 @@ public class TableDAO {
     }
 
     public int getTableCount() {
-        final String SQL = "SELECT COUNT(*) as total FROM tables WHERE is_deleted = FALSE";
+        final String SQL = "SELECT COUNT(*) as total FROM tables";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL);

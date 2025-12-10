@@ -1,9 +1,24 @@
--- Bahar Kıraathanesi Veritabanı Kurulum Scripti
--- Bu script tüm tabloları ve başlangıç verilerini oluşturur
+-- Bahar Kıraathanesi Veritabanı Kurulum Scripti (Final)
+-- Tüm tabloları oluşturur ve başlangıç verilerini sadece bir kere ekler.
 
--- Veritabanını oluştur (eğer yoksa)
+-- Veritabanını oluştur
 CREATE DATABASE IF NOT EXISTS bahar_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE bahar_db;
+
+-- 0. Kurulum kontrol tablosu (setup)
+CREATE TABLE IF NOT EXISTS setup (
+                                     id INT PRIMARY KEY,
+                                     is_done BOOLEAN DEFAULT FALSE
+);
+
+-- İlk kayıt yoksa oluştur (tekrar çalışırsa hata vermez)
+INSERT IGNORE INTO setup (id, is_done) VALUES (1, FALSE);
+
+-- Eğer kurulum daha önce yapıldıysa script burada durdurulur (uygulama tarafı kontrol eder)
+SELECT IF(is_done = TRUE, 'Kurulum zaten yapılmış, işlem sonlandırıldı.', 'Kurulum başlatılıyor...')
+           AS setup_status
+FROM setup WHERE id = 1;
+
 
 -- 1. USERS Tablosu
 CREATE TABLE IF NOT EXISTS users (
@@ -14,17 +29,17 @@ CREATE TABLE IF NOT EXISTS users (
                                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Varsayılan kullanıcıları ekle (varsa güncelle)
+-- Varsayılan kullanıcılar
 INSERT INTO users (username, password, role)
 VALUES ('yonetici', '1234', 'admin')
 ON DUPLICATE KEY UPDATE password='1234', role='admin';
 
 INSERT INTO users (username, password, role)
-VALUES ( 'admin', '1234', 'admin')
+VALUES ('admin', '1234', 'admin')
 ON DUPLICATE KEY UPDATE password='1234', role='admin';
 
+
 -- 2. PRODUCTS Tablosu
--- DEĞİŞİKLİK: name sütununa UNIQUE eklendi. Aynı isimde ürün girilemez.
 CREATE TABLE IF NOT EXISTS products (
                                         id INT AUTO_INCREMENT PRIMARY KEY,
                                         name VARCHAR(100) NOT NULL UNIQUE,
@@ -33,15 +48,15 @@ CREATE TABLE IF NOT EXISTS products (
                                         stock_qty INT DEFAULT 0,
                                         unit VARCHAR(20) DEFAULT 'adet',
                                         critical_level INT DEFAULT 10,
-                                        stock_package INT DEFAULT 0 COMMENT 'Paket sayısı',
-                                        portions_per_package INT DEFAULT 1 COMMENT 'Paket başına porsiyon',
-                                        stock_display VARCHAR(100) DEFAULT NULL COMMENT 'Stok gösterimi',
+                                        stock_package INT DEFAULT 0,
+                                        portions_per_package INT DEFAULT 1,
+                                        stock_display VARCHAR(100) DEFAULT NULL,
                                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- 3. TABLES Tablosu (Kıraathane masaları) - SADECE 15 MASA
--- DEĞİŞİKLİK: name sütununa UNIQUE eklendi. Aynı isimde masa girilemez.
+
+-- 3. TABLES Tablosu
 CREATE TABLE IF NOT EXISTS tables (
                                       id INT AUTO_INCREMENT PRIMARY KEY,
                                       name VARCHAR(50) NOT NULL UNIQUE,
@@ -49,23 +64,23 @@ CREATE TABLE IF NOT EXISTS tables (
                                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Varsayılan 15 masayı ekle (eğer yoksa)
--- INSERT IGNORE: Masa ismi varsa atlar, yoksa ekler.
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 1' , FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 2' , FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 3' , FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 4' , FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 5' , FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 6' , FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 7' , FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 8' , FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 9' , FALSE);
+-- Varsayılan 15 masa (INSERT IGNORE → tekrar eklemez, hata vermez)
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 1', FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 2', FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 3', FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 4', FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 5', FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 6', FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 7', FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 8', FALSE);
+INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 9', FALSE);
 INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 10', FALSE);
 INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 11', FALSE);
 INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 12', FALSE);
 INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 13', FALSE);
 INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 14', FALSE);
 INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 15', FALSE);
+
 
 -- 4. ORDERS Tablosu
 CREATE TABLE IF NOT EXISTS orders (
@@ -76,6 +91,7 @@ CREATE TABLE IF NOT EXISTS orders (
                                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                       FOREIGN KEY (table_id) REFERENCES tables(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
 
 -- 5. ORDER_ITEMS Tablosu
 CREATE TABLE IF NOT EXISTS order_items (
@@ -89,7 +105,8 @@ CREATE TABLE IF NOT EXISTS order_items (
                                            FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- 6. REPORTS Tablosu (İsteğe bağlı, günlük raporlar için)
+
+-- 6. REPORTS Tablosu
 CREATE TABLE IF NOT EXISTS reports (
                                        id INT AUTO_INCREMENT PRIMARY KEY,
                                        report_date DATE NOT NULL UNIQUE,
@@ -98,10 +115,8 @@ CREATE TABLE IF NOT EXISTS reports (
                                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Başlangıç ürünlerini ekle
--- DEĞİŞİKLİK: INSERT IGNORE kullanıldı.
--- Mantık: 'Çay' veritabanında varsa HİÇBİR ŞEY YAPMA (atla). Yoksa ekle.
--- Böylece sonradan eklediğin 'Tost' veya güncellediğin fiyatlar bozulmaz.
+
+-- Başlangıç ürünleri (INSERT IGNORE → tekrar eklenmez)
 INSERT IGNORE INTO products (name, category, price, stock_qty, unit, critical_level, stock_package, portions_per_package, stock_display)
 VALUES
     ('Çay', 'Sıcak İçecek', 15.00, 1000, 'bardak', 100, 5, 200, '5 paket (1000 bardak)'),
@@ -117,10 +132,16 @@ VALUES
     ('Sıcak Çikolata', 'Sıcak İçecek', 30.00, 100, 'bardak', 30, 2, 50, '2 paket (100 bardak)'),
     ('Salep', 'Sıcak İçecek', 35.00, 80, 'bardak', 30, 2, 40, '2 paket (80 bardak)');
 
--- Fazla masaları sil (sadece 15 masa kalmalı)
+
+-- Fazla masaları sil (script tekrar çalışsa bile problem yok)
 DELETE FROM tables WHERE id > 15;
 
--- Kurulum tamamlandı mesajı
+
+-- Kurulum tamamlandı → setup tablosunu işaretle
+UPDATE setup SET is_done = TRUE WHERE id = 1;
+
+
+-- Özet bilgi
 SELECT '✅ Veritabanı başarıyla kuruldu!' AS status;
 SELECT COUNT(*) AS total_products FROM products;
 SELECT COUNT(*) AS total_tables FROM tables;
