@@ -15,7 +15,7 @@ public class TableDAO {
 
     public List<Table> getAllTables() {
         List<Table> tableList = new ArrayList<>();
-        final String SQL = "SELECT * FROM tables ORDER BY id";
+        final String SQL = "SELECT * FROM tables WHERE is_deleted = FALSE ORDER BY id";
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -69,7 +69,7 @@ public class TableDAO {
             return false;
         }
 
-        final String SQL = "INSERT INTO tables (name, is_occupied) VALUES (?, FALSE)";
+        final String SQL = "INSERT INTO tables (name, is_occupied, is_deleted) VALUES (?, FALSE, FALSE)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL)) {
@@ -92,7 +92,7 @@ public class TableDAO {
     }
 
     public boolean deleteTable(int tableId) {
-        final String SQL = "DELETE FROM tables WHERE id = ?";
+        final String SQL = "UPDATE tables SET is_deleted = TRUE WHERE id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL)) {
@@ -124,9 +124,9 @@ public class TableDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new Table(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getBoolean("is_occupied")
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getBoolean("is_occupied")
                     );
                 }
             }
@@ -139,7 +139,7 @@ public class TableDAO {
     }
 
     public int getTableCount() {
-        final String SQL = "SELECT COUNT(*) as total FROM tables";
+        final String SQL = "SELECT COUNT(*) as total FROM tables WHERE is_deleted = FALSE";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL);

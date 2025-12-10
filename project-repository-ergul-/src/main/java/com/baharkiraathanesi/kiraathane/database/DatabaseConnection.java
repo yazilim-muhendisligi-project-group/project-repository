@@ -4,10 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,8 +27,7 @@ public class DatabaseConnection {
         loadProperties();
     }
 
-    private DatabaseConnection() {
-    }
+    private DatabaseConnection() {}
 
     private static void loadProperties() {
         Properties props = new Properties();
@@ -50,8 +46,7 @@ public class DatabaseConnection {
             loadFromEnvironmentVariables();
         }
 
-        // ÖNEMLİ GÜNCELLEME: createDatabaseIfNotExist=true eklendi.
-        // Bu, veritabanı yoksa bağlantı hatası vermek yerine oluşturulmasını sağlar.
+        // createDatabaseIfNotExist= true → veritabanı yoksa bağlantı sırasında otomatik oluşturur
         dbUrl = String.format(
                 "jdbc:mysql://%s:%s/%s?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8",
                 dbHost, dbPort, dbName
@@ -74,8 +69,6 @@ public class DatabaseConnection {
     public static Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {
-                // Driver kontrolü opsiyoneldir modern JDBC'de ama kalabilir
-                // Class.forName("com.mysql.cj.jdbc.Driver");
                 connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
             }
             return connection;
@@ -86,40 +79,73 @@ public class DatabaseConnection {
         }
     }
 
-    // --- YENİ EKLENEN METOD: setupDatabase ---
+    // ===========================
+    //   VERITABANI VAR MI KONTROL
+    // ===========================
+    private static boolean databaseExists() {
+        String checkSql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
+
+        try (Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://" + dbHost + ":" + dbPort + "/?useSSL=false&allowPublicKeyRetrieval=true",
+                dbUser,
+                dbPassword
+        );
+             PreparedStatement ps = conn.prepareStatement(checkSql)) {
+
+            ps.setString(1, dbName);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();  // varsa true döner
+
+        } catch (SQLException e) {
+            LOGGER.warning("Veritabani kontrol edilemedi: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // ===========================
+    //   VERITABANI KURULUMU
+    // ===========================
     public static void setupDatabase() {
         LOGGER.info("Veritabani kurulumu baslatiliyor...");
 
-        // setup_database.sql dosyasını oku
-        InputStream inputStream = DatabaseConnection.class.getResourceAsStream("/db/setup_database.sql");
-        if (inputStream == null) {
-            LOGGER.severe("setup_database.sql dosyasi resources klasorunde bulunamadi!");
+        // Eğer veritabanı zaten varsa kurulumu çalıştırma
+        if (databaseExists()) {
+            LOGGER.info(dbName + " veritabani zaten mevcut. Kurulum atlandi.");
             return;
         }
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-             Connection conn = getConnection();
-             Statement statement = conn.createStatement()) {
+        LOGGER.info(dbName + " bulunamadi. Kurulum SQL dosyasi uygulanacak...");
 
-            if (conn == null) return;
+        InputStream inputStream = DatabaseConnection.class.getResourceAsStream("/db/setup_database.sql");
+        if (inputStream == null) {
+            LOGGER.severe("setup_database.sql dosyasi resources/db klasorunde bulunamadi!");
+            return;
+        }
 
-            // Dosyayı string olarak oku
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+
+            // Dosyayı oku
             String sqlScript = reader.lines().collect(Collectors.joining("\n"));
 
-            // Noktalı virgüle göre komutları ayır
-            String[] sqlStatements = sqlScript.split(";");
+            try (Connection conn = getConnection(); Statement statement = conn.createStatement()) {
 
-            for (String sql : sqlStatements) {
-                if (!sql.trim().isEmpty()) {
-                    try {
-                        statement.execute(sql);
-                    } catch (SQLException e) {
-                        // Tablo zaten varsa veya veri duplicate ise logla ama programı durdurma
-                        LOGGER.warning("SQL Komut Hatasi (Onemsiz olabilir): " + e.getMessage());
+                if (conn == null) return;
+
+                // SQL komutlarını ; ile böl
+                String[] sqlStatements = sqlScript.split(";");
+
+                for (String sql : sqlStatements) {
+                    if (!sql.trim().isEmpty()) {
+                        try {
+                            statement.execute(sql);
+                        } catch (SQLException e) {
+                            LOGGER.warning("SQL Komut Hatasi (Onemsiz olabilir): " + e.getMessage());
+                        }
                     }
                 }
+
+                LOGGER.info("Veritabani kurulum islemleri BASARIYLA tamamlandi.");
             }
-            LOGGER.info("Veritabani kurulum islemleri tamamlandi.");
 
         } catch (IOException | SQLException e) {
             LOGGER.log(Level.SEVERE, "Veritabani kurulumunda hata", e);
@@ -134,11 +160,8 @@ public class DatabaseConnection {
 
     public static void closeConnection() {
         if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            try { connection.close(); }
+            catch (SQLException ignored) {}
         }
     }
 }

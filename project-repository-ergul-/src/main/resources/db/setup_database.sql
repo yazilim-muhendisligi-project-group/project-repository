@@ -56,30 +56,32 @@ CREATE TABLE IF NOT EXISTS products (
 ) ENGINE=InnoDB;
 
 
--- 3. TABLES Tablosu
+-- 3. TABLES Tablosu  (GÜNCELLENDİ — is_deleted EKLENDİ)
 CREATE TABLE IF NOT EXISTS tables (
                                       id INT AUTO_INCREMENT PRIMARY KEY,
                                       name VARCHAR(50) NOT NULL UNIQUE,
                                       is_occupied BOOLEAN DEFAULT FALSE,
+                                      is_deleted BOOLEAN DEFAULT FALSE,   -- ✔ EKLENDİ
                                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Varsayılan 15 masa (INSERT IGNORE → tekrar eklemez, hata vermez)
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 1', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 2', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 3', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 4', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 5', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 6', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 7', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 8', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 9', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 10', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 11', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 12', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 13', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 14', FALSE);
-INSERT IGNORE INTO tables (name, is_occupied) VALUES ('Masa 15', FALSE);
+-- Varsayılan 15 masa
+INSERT IGNORE INTO tables (name, is_occupied, is_deleted)
+VALUES ('Masa 1', FALSE, FALSE),
+       ('Masa 2', FALSE, FALSE),
+       ('Masa 3', FALSE, FALSE),
+       ('Masa 4', FALSE, FALSE),
+       ('Masa 5', FALSE, FALSE),
+       ('Masa 6', FALSE, FALSE),
+       ('Masa 7', FALSE, FALSE),
+       ('Masa 8', FALSE, FALSE),
+       ('Masa 9', FALSE, FALSE),
+       ('Masa 10', FALSE, FALSE),
+       ('Masa 11', FALSE, FALSE),
+       ('Masa 12', FALSE, FALSE),
+       ('Masa 13', FALSE, FALSE),
+       ('Masa 14', FALSE, FALSE),
+       ('Masa 15', FALSE, FALSE);
 
 
 -- 4. ORDERS Tablosu
@@ -116,7 +118,7 @@ CREATE TABLE IF NOT EXISTS reports (
 ) ENGINE=InnoDB;
 
 
--- Başlangıç ürünleri (INSERT IGNORE → tekrar eklenmez)
+-- Başlangıç ürünleri
 INSERT IGNORE INTO products (name, category, price, stock_qty, unit, critical_level, stock_package, portions_per_package, stock_display)
 VALUES
     ('Çay', 'Sıcak İçecek', 15.00, 1000, 'bardak', 100, 5, 200, '5 paket (1000 bardak)'),
@@ -144,5 +146,5 @@ UPDATE setup SET is_done = TRUE WHERE id = 1;
 -- Özet bilgi
 SELECT '✅ Veritabanı başarıyla kuruldu!' AS status;
 SELECT COUNT(*) AS total_products FROM products;
-SELECT COUNT(*) AS total_tables FROM tables;
+SELECT COUNT(*) AS total_tables FROM tables WHERE is_deleted = FALSE;
 SELECT COUNT(*) AS total_users FROM users;
