@@ -244,6 +244,65 @@ public class OrderDAO {
         return items;
     }
 
+    /**
+     * Sipariş kaleminin miktarını 1 azaltır.
+     * Miktar 0'a düşerse ürün siparişten tamamen silinir.
+     * @return true: başarılı, false: hata
+     */
+    public boolean decreaseItemQuantity(int orderItemId, int productId) {
+        final String INFO_SQL = "SELECT order_id, quantity, price_at_order FROM order_items WHERE id = ?";
+        final String UPDATE_QTY_SQL = "UPDATE order_items SET quantity = quantity - 1 WHERE id = ?";
+        final String UPDATE_TOTAL_SQL = "UPDATE orders SET total_amount = total_amount - ? WHERE id = ?";
+        final String UPDATE_STOCK_SQL = "UPDATE products SET stock_qty = stock_qty + 1 WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            if (conn == null) return false;
+
+            int orderId = -1;
+            int currentQty = 0;
+            double priceAtOrder = 0;
+
+            try (PreparedStatement infoStmt = conn.prepareStatement(INFO_SQL)) {
+                infoStmt.setInt(1, orderItemId);
+                try (ResultSet rs = infoStmt.executeQuery()) {
+                    if (rs.next()) {
+                        orderId = rs.getInt("order_id");
+                        currentQty = rs.getInt("quantity");
+                        priceAtOrder = rs.getDouble("price_at_order");
+                    }
+                }
+            }
+
+            if (currentQty <= 1) {
+                // Miktar 1 veya daha az, ürünü tamamen sil
+                removeOrderItem(orderItemId, productId, 1);
+            } else {
+                // Miktarı 1 azalt
+                try (PreparedStatement updateStmt = conn.prepareStatement(UPDATE_QTY_SQL)) {
+                    updateStmt.setInt(1, orderItemId);
+                    updateStmt.executeUpdate();
+                }
+
+                try (PreparedStatement totalStmt = conn.prepareStatement(UPDATE_TOTAL_SQL)) {
+                    totalStmt.setDouble(1, priceAtOrder);
+                    totalStmt.setInt(2, orderId);
+                    totalStmt.executeUpdate();
+                }
+
+                try (PreparedStatement stockStmt = conn.prepareStatement(UPDATE_STOCK_SQL)) {
+                    stockStmt.setInt(1, productId);
+                    stockStmt.executeUpdate();
+                }
+            }
+
+            return true;
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Siparis miktari azaltilirken hata", e);
+        }
+        return false;
+    }
+
     public void removeOrderItem(int orderItemId, int productId, int quantity) {
         final String INFO_SQL = "SELECT order_id, price_at_order FROM order_items WHERE id = ?";
         final String DELETE_ITEM_SQL = "DELETE FROM order_items WHERE id = ?";

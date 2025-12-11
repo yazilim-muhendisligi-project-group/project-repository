@@ -23,13 +23,15 @@
     </center>
 
     <right>
-        <VBox spacing="15" minWidth="300" style="-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, -5, 0);">
+        <VBox spacing="15" minWidth="320" style="-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, -5, 0);">
             <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
 
             <Label text="Sipariş Özeti" styleClass="header-label" style="-fx-font-size: 18px;"/>
             <Separator/>
 
-            <ListView fx:id="orderListView" VBox.vgrow="ALWAYS" style="-fx-background-insets: 0; -fx-padding: 5;"/>
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background-insets: 0;">
+                <VBox fx:id="orderItemsContainer" spacing="6" style="-fx-padding: 5;"/>
+            </ScrollPane>
 
             <Separator/>
 
@@ -43,10 +45,7 @@
                 <Button text="HESABI KAPAT" onAction="#closeCheck"
                         maxWidth="Infinity" style="-fx-background-color: #FF5722; -fx-font-size: 16px; -fx-padding: 10;"/>
 
-                <HBox spacing="10">
-                    <Button text="Seçiliyi Sil" onAction="#deleteSelectedItem" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="danger-button"/>
-                    <Button text="Hepsini Sil" onAction="#clearAllItems" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-background-color: #9E9E9E;"/>
-                </HBox>
+                <Button text="Tüm Siparişleri Temizle" onAction="#clearAllItems" maxWidth="Infinity" style="-fx-background-color: #9E9E9E;"/>
             </VBox>
         </VBox>
     </right>

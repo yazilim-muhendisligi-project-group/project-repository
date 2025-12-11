@@ -9,13 +9,12 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Logger;
 
 public class OrderController {
@@ -29,7 +28,7 @@ public class OrderController {
     private FlowPane productsContainer;
 
     @FXML
-    private ListView<String> orderListView;
+    private VBox orderItemsContainer;
 
     @FXML
     private Label totalLabel;
@@ -37,7 +36,6 @@ public class OrderController {
     private int currentTableId;
     private final OrderDAO orderDAO = new OrderDAO();
     private final ProductDAO productDAO = new ProductDAO();
-    private final Map<String, OrderItem> orderItemMap = new HashMap<>();
 
     public void setTableInfo(int tableId, String tableName) {
         this.currentTableId = tableId;
@@ -91,21 +89,91 @@ public class OrderController {
     }
 
     private void refreshOrderList() {
-        orderListView.getItems().clear();
-        orderItemMap.clear();
+        orderItemsContainer.getChildren().clear();
 
         List<OrderItem> items = orderDAO.getOrderItems(currentTableId);
         double total = 0;
 
         for (OrderItem item : items) {
-            String displayText = item.getProductName() + " x" + item.getQuantity() +
-                    " - " + String.format("%.2f", item.getSubtotal()) + " TL";
-            orderListView.getItems().add(displayText);
-            orderItemMap.put(displayText, item);
+            HBox card = createOrderItemCard(item);
+            orderItemsContainer.getChildren().add(card);
             total += item.getSubtotal();
         }
 
         totalLabel.setText("Toplam: " + String.format("%.2f", total) + " TL");
+    }
+
+    /**
+     * Her sipariş kalemi için kompakt görsel kart oluşturur.
+     * Sabit genişlikli kolonlar ile stabil tasarım.
+     */
+    private HBox createOrderItemCard(OrderItem item) {
+        HBox card = new HBox(4);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setStyle("-fx-background-color: #f5f5f5; -fx-background-radius: 6; -fx-padding: 8 10;");
+
+        // Ürün adı - genişletilmiş alan
+        Label nameLabel = new Label(item.getProductName());
+        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
+        nameLabel.setPrefWidth(115);
+        nameLabel.setMinWidth(115);
+        nameLabel.setMaxWidth(115);
+        nameLabel.setEllipsisString("...");
+        nameLabel.setTextOverrun(javafx.scene.control.OverrunStyle.ELLIPSIS);
+
+        // Buton grubu - kompakt
+        HBox buttonGroup = new HBox(3);
+        buttonGroup.setAlignment(Pos.CENTER);
+        buttonGroup.setPrefWidth(80);
+        buttonGroup.setMinWidth(80);
+        buttonGroup.setMaxWidth(80);
+
+        // Azalt butonu
+        Button minusBtn = new Button("−");
+        minusBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; " +
+                "-fx-min-width: 26; -fx-max-width: 26; -fx-min-height: 26; -fx-max-height: 26; " +
+                "-fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 14px; -fx-padding: 0;");
+        minusBtn.setOnAction(e -> {
+            orderDAO.decreaseItemQuantity(item.getId(), item.getProductId());
+            refreshOrderList();
+            loadProducts();
+        });
+
+        // Miktar - sabit genişlik
+        Label qtyLabel = new Label(String.valueOf(item.getQuantity()));
+        qtyLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold;");
+        qtyLabel.setPrefWidth(24);
+        qtyLabel.setMinWidth(24);
+        qtyLabel.setMaxWidth(24);
+        qtyLabel.setAlignment(Pos.CENTER);
+
+        // Artır butonu
+        Button plusBtn = new Button("+");
+        plusBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; " +
+                "-fx-min-width: 26; -fx-max-width: 26; -fx-min-height: 26; -fx-max-height: 26; " +
+                "-fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 14px; -fx-padding: 0;");
+        plusBtn.setOnAction(e -> {
+            boolean success = orderDAO.addProductToOrder(currentTableId, item.getProductId(), 1);
+            if (success) {
+                refreshOrderList();
+                loadProducts();
+            } else {
+                showAlert(Alert.AlertType.WARNING, "Stok Yetersiz", item.getProductName() + " için yeterli stok yok!");
+            }
+        });
+
+        buttonGroup.getChildren().addAll(minusBtn, qtyLabel, plusBtn);
+
+        // Fiyat - daraltılmış, sağa hizalı
+        Label priceLabel = new Label(String.format("%.2f ₺", item.getSubtotal()));
+        priceLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #333;");
+        priceLabel.setPrefWidth(60);
+        priceLabel.setMinWidth(60);
+        priceLabel.setMaxWidth(60);
+        priceLabel.setAlignment(Pos.CENTER_RIGHT);
+
+        card.getChildren().addAll(nameLabel, buttonGroup, priceLabel);
+        return card;
     }
 
     @FXML
@@ -130,20 +198,6 @@ public class OrderController {
         HelloApplication.changeScene("tables-view.fxml");
     }
 
-    @FXML
-    public void deleteSelectedItem() {
-        String selectedText = orderListView.getSelectionModel().getSelectedItem();
-        if (selectedText != null) {
-            OrderItem selectedItem = orderItemMap.get(selectedText);
-            if (selectedItem != null) {
-                orderDAO.removeOrderItem(selectedItem.getId(), selectedItem.getProductId(), selectedItem.getQuantity());
-                refreshOrderList();
-                loadProducts();
-            }
-        } else {
-            showAlert(Alert.AlertType.WARNING, "Uyari", "Lutfen silmek icin bir urun secin!");
-        }
-    }
 
     @FXML
     public void clearAllItems() {
