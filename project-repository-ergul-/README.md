@@ -184,7 +184,7 @@ Before installation, ensure you have the following:
 
 | Software | Minimum Version | Download Link |
 |:---------|:----------------|:--------------|
-| Java JDK | 21 | [Adoptium](https://adoptium.net/) |
+| Java JDK | 21 | [Amazon Corretto 21](https://docs.aws.amazon.com/corretto/latest/corretto-21-ug/downloads-list.html) |
 | MySQL Server | 8.0 | [MySQL Downloads](https://dev.mysql.com/downloads/) |
 | Maven | 3.8 (optional) | [Apache Maven](https://maven.apache.org/download.cgi) |
 
@@ -251,7 +251,11 @@ db.user=root
 db.password=YOUR_PASSWORD
 ```
 
-> **Security Note:** The `db.properties` file is excluded from version control via `.gitignore`
+> ⚠️ **IMPORTANT SECURITY NOTE / ÖNEMLİ GÜVENLİK UYARISI**
+> 
+> **English:** The `db.properties` file contains your database password and is **excluded from version control** via `.gitignore`. Each developer must create this file locally. **Never commit your credentials to Git!**
+> 
+> **Türkçe:** `db.properties` dosyası veritabanı şifrenizi içerir ve `.gitignore` sayesinde **Git'e dahil edilmez**. Her geliştirici bu dosyayı kendi bilgisayarında oluşturmalıdır. **Şifrelerinizi asla Git'e pushlamayın!**
 
 ### Step 4: Build the Project
 
