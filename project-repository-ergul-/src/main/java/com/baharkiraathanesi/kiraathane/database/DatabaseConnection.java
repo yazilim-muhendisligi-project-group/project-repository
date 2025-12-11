@@ -1,13 +1,14 @@
 package com.baharkiraathanesi.kiraathane.database;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.io.InputStreamReader;
+import java.sql.*;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class DatabaseConnection {
 
@@ -26,8 +27,7 @@ public class DatabaseConnection {
         loadProperties();
     }
 
-    private DatabaseConnection() {
-    }
+    private DatabaseConnection() {}
 
     private static void loadProperties() {
         Properties props = new Properties();
@@ -39,19 +39,17 @@ public class DatabaseConnection {
                 dbName = props.getProperty("db.name", "bahar_db");
                 dbUser = props.getProperty("db.user", "root");
                 dbPassword = props.getProperty("db.password", "");
-                LOGGER.info("db.properties dosyasindan ayarlar yuklendi");
             } else {
                 loadFromEnvironmentVariables();
-                LOGGER.warning("db.properties bulunamadi, ortam degiskenleri kullaniliyor");
             }
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "db.properties okunamadi, ortam degiskenleri kullaniliyor", e);
             loadFromEnvironmentVariables();
         }
 
+        // createDatabaseIfNotExist= true → veritabanı yoksa bağlantı sırasında otomatik oluşturur
         dbUrl = String.format(
-            "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8",
-            dbHost, dbPort, dbName
+                "jdbc:mysql://%s:%s/%s?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8",
+                dbHost, dbPort, dbName
         );
     }
 
@@ -71,16 +69,9 @@ public class DatabaseConnection {
     public static Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {
-                Class.forName("com.mysql.cj.jdbc.Driver");
                 connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-                LOGGER.info("Veritabani baglantisi basarili: " + dbName);
             }
             return connection;
-
-        } catch (ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "MySQL Driver bulunamadi. pom.xml kontrol edin.", e);
-            return null;
-
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Veritabani baglanti hatasi: " + e.getMessage(), e);
             logConnectionHelp();
@@ -88,36 +79,89 @@ public class DatabaseConnection {
         }
     }
 
+    // ===========================
+    //   VERITABANI VAR MI KONTROL
+    // ===========================
+    private static boolean databaseExists() {
+        String checkSql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
+
+        try (Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://" + dbHost + ":" + dbPort + "/?useSSL=false&allowPublicKeyRetrieval=true",
+                dbUser,
+                dbPassword
+        );
+             PreparedStatement ps = conn.prepareStatement(checkSql)) {
+
+            ps.setString(1, dbName);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();  // varsa true döner
+
+        } catch (SQLException e) {
+            LOGGER.warning("Veritabani kontrol edilemedi: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // ===========================
+    //   VERITABANI KURULUMU
+    // ===========================
+    public static void setupDatabase() {
+        LOGGER.info("Veritabani kurulumu baslatiliyor...");
+
+        // Eğer veritabanı zaten varsa kurulumu çalıştırma
+        if (databaseExists()) {
+            LOGGER.info(dbName + " veritabani zaten mevcut. Kurulum atlandi.");
+            return;
+        }
+
+        LOGGER.info(dbName + " bulunamadi. Kurulum SQL dosyasi uygulanacak...");
+
+        InputStream inputStream = DatabaseConnection.class.getResourceAsStream("/db/setup_database.sql");
+        if (inputStream == null) {
+            LOGGER.severe("setup_database.sql dosyasi resources/db klasorunde bulunamadi!");
+            return;
+        }
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+
+            // Dosyayı oku
+            String sqlScript = reader.lines().collect(Collectors.joining("\n"));
+
+            try (Connection conn = getConnection(); Statement statement = conn.createStatement()) {
+
+                if (conn == null) return;
+
+                // SQL komutlarını ; ile böl
+                String[] sqlStatements = sqlScript.split(";");
+
+                for (String sql : sqlStatements) {
+                    if (!sql.trim().isEmpty()) {
+                        try {
+                            statement.execute(sql);
+                        } catch (SQLException e) {
+                            LOGGER.warning("SQL Komut Hatasi (Onemsiz olabilir): " + e.getMessage());
+                        }
+                    }
+                }
+
+                LOGGER.info("Veritabani kurulum islemleri BASARIYLA tamamlandi.");
+            }
+
+        } catch (IOException | SQLException e) {
+            LOGGER.log(Level.SEVERE, "Veritabani kurulumunda hata", e);
+        }
+    }
+
     private static void logConnectionHelp() {
         LOGGER.severe("VERITABANI BAGLANTISI KURULAMADI");
-        LOGGER.info("COZUM ADIMLARI:");
-        LOGGER.info("1. MySQL calistigini kontrol edin");
-        LOGGER.info("2. Veritabanini kurun: mysql -u root -p < setup_database.sql");
-        LOGGER.info("3. Baglanti bilgilerini kontrol edin:");
-        LOGGER.info("   Host: " + dbHost);
-        LOGGER.info("   Port: " + dbPort);
-        LOGGER.info("   Database: " + dbName);
-        LOGGER.info("   User: " + dbUser);
+        LOGGER.info("1. MySQL servisinin calistigindan emin olun.");
+        LOGGER.info("2. Host: " + dbHost + ", Port: " + dbPort);
     }
 
     public static void closeConnection() {
         if (connection != null) {
-            try {
-                connection.close();
-                LOGGER.info("Veritabani baglantisi kapatildi");
-            } catch (SQLException e) {
-                LOGGER.log(Level.WARNING, "Baglanti kapatilirken hata olustu", e);
-            }
-        }
-    }
-
-    public static boolean testConnection() {
-        try (Connection conn = getConnection()) {
-            return conn != null && !conn.isClosed();
-        } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Baglanti testi basarisiz", e);
-            return false;
+            try { connection.close(); }
+            catch (SQLException ignored) {}
         }
     }
 }
-

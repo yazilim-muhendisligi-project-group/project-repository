@@ -6,5 +6,4 @@ db.host=localhost
 db.port=3306
 db.name=bahar_db
 db.user=root
-db.password=YOUR_PASSWORD_HERE
-
+db.password=

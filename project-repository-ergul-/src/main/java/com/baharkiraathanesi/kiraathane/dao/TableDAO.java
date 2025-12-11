@@ -124,9 +124,9 @@ public class TableDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new Table(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getBoolean("is_occupied")
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getBoolean("is_occupied")
                     );
                 }
             }

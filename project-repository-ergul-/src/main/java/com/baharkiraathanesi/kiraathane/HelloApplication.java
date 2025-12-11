@@ -1,5 +1,6 @@
 package com.baharkiraathanesi.kiraathane;
 
+import com.baharkiraathanesi.kiraathane.database.DatabaseConnection;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -18,6 +19,7 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        DatabaseConnection.setupDatabase();
         primaryStage = stage;
         changeScene("login-view.fxml");
         stage.setTitle("Kiraathane Otomasyonu");
