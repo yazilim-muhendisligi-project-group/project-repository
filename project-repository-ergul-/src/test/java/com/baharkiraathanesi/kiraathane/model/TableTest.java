@@ -18,7 +18,6 @@ class TableTest {
 
     @Test
     void testToString() {
-        // toString metodu masa adını ve durumunu içermeli
         Table emptyTable = new Table(2, "Masa 2", false);
         Table occupiedTable = new Table(3, "Masa 3", true);
 
