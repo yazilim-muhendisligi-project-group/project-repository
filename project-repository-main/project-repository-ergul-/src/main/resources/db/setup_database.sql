@@ -1,4 +1,4 @@
--- Bahar Kıraathanesi Veritabanı Kurulum Scripti (Final)
+-- Bahar Kıraathanesi Veritabanı Kurulum Scripti
 -- Tüm tabloları oluşturur ve başlangıç verilerini sadece bir kere ekler.
 
 -- Veritabanını oluştur
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS setup (
                                      is_done BOOLEAN DEFAULT FALSE
 );
 
--- İlk kayıt yoksa oluştur (tekrar çalışırsa hata vermez)
+-- İlk kayıt yoksa oluştur
 INSERT IGNORE INTO setup (id, is_done) VALUES (1, FALSE);
 
 -- Eğer kurulum daha önce yapıldıysa script burada durdurulur (uygulama tarafı kontrol eder)
@@ -24,46 +24,46 @@ FROM setup WHERE id = 1;
 CREATE TABLE IF NOT EXISTS users (
                                      id INT AUTO_INCREMENT PRIMARY KEY,
                                      username VARCHAR(50) NOT NULL UNIQUE,
-                                     password VARCHAR(255) NOT NULL,
-                                     role VARCHAR(20) DEFAULT 'user',
-                                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;
 
 -- Varsayılan kullanıcılar
 INSERT INTO users (username, password, role)
 VALUES ('yonetici', '1234', 'admin')
-ON DUPLICATE KEY UPDATE password='1234', role='admin';
+    ON DUPLICATE KEY UPDATE password='1234', role='admin';
 
 INSERT INTO users (username, password, role)
 VALUES ('admin', '1234', 'admin')
-ON DUPLICATE KEY UPDATE password='1234', role='admin';
+    ON DUPLICATE KEY UPDATE password='1234', role='admin';
 
 
 -- 2. PRODUCTS Tablosu
 CREATE TABLE IF NOT EXISTS products (
                                         id INT AUTO_INCREMENT PRIMARY KEY,
                                         name VARCHAR(100) NOT NULL UNIQUE,
-                                        category VARCHAR(50) NOT NULL,
-                                        price DECIMAL(10, 2) NOT NULL,
-                                        stock_qty INT DEFAULT 0,
-                                        unit VARCHAR(20) DEFAULT 'adet',
-                                        critical_level INT DEFAULT 10,
-                                        stock_package INT DEFAULT 0,
-                                        portions_per_package INT DEFAULT 1,
-                                        stock_display VARCHAR(100) DEFAULT NULL,
-                                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+    category VARCHAR(50) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    stock_qty INT DEFAULT 0,
+    unit VARCHAR(20) DEFAULT 'adet',
+    critical_level INT DEFAULT 10,
+    stock_package INT DEFAULT 0,
+    portions_per_package INT DEFAULT 1,
+    stock_display VARCHAR(100) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;
 
 
--- 3. TABLES Tablosu  (GÜNCELLENDİ — is_deleted EKLENDİ)
+-- 3. TABLES Tablosu
 CREATE TABLE IF NOT EXISTS tables (
                                       id INT AUTO_INCREMENT PRIMARY KEY,
                                       name VARCHAR(50) NOT NULL UNIQUE,
-                                      is_occupied BOOLEAN DEFAULT FALSE,
-                                      is_deleted BOOLEAN DEFAULT FALSE,   -- ✔ EKLENDİ
-                                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+    is_occupied BOOLEAN DEFAULT FALSE,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;
 
 -- Varsayılan 15 masa
 INSERT IGNORE INTO tables (name, is_occupied, is_deleted)
@@ -89,10 +89,10 @@ CREATE TABLE IF NOT EXISTS orders (
                                       id INT AUTO_INCREMENT PRIMARY KEY,
                                       table_id INT NOT NULL,
                                       total_amount DECIMAL(10, 2) DEFAULT 0.00,
-                                      is_paid BOOLEAN DEFAULT FALSE,
-                                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                      FOREIGN KEY (table_id) REFERENCES tables(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    is_paid BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (table_id) REFERENCES tables(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
 
 
 -- 5. ORDER_ITEMS Tablosu
@@ -102,10 +102,10 @@ CREATE TABLE IF NOT EXISTS order_items (
                                            product_id INT NOT NULL,
                                            quantity INT NOT NULL,
                                            price_at_order DECIMAL(10, 2) NOT NULL,
-                                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                           FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-                                           FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
 
 
 -- 6. REPORTS Tablosu
@@ -113,12 +113,22 @@ CREATE TABLE IF NOT EXISTS reports (
                                        id INT AUTO_INCREMENT PRIMARY KEY,
                                        report_date DATE NOT NULL UNIQUE,
                                        total_revenue DECIMAL(10, 2) DEFAULT 0.00,
-                                       total_orders INT DEFAULT 0,
-                                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+    total_orders INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;
 
 
--- Başlangıç ürünleri
+-- 7. CUSTOMERS Tablosu (YENİ EKLENEN - Veresiye İçin)
+CREATE TABLE IF NOT EXISTS customers (
+                                         id INT AUTO_INCREMENT PRIMARY KEY,
+                                         full_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    balance DECIMAL(10, 2) DEFAULT 0.00,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;
+
+
+-- Başlangıç ürünleri (Kategoriler Türkçe Karakterli)
 INSERT IGNORE INTO products (name, category, price, stock_qty, unit, critical_level, stock_package, portions_per_package, stock_display)
 VALUES
     ('Çay', 'Sıcak İçecek', 15.00, 1000, 'bardak', 100, 5, 200, '5 paket (1000 bardak)'),
@@ -135,7 +145,7 @@ VALUES
     ('Salep', 'Sıcak İçecek', 35.00, 80, 'bardak', 30, 2, 40, '2 paket (80 bardak)');
 
 
--- Fazla masaları sil (script tekrar çalışsa bile problem yok)
+-- Fazla masaları sil (Temizlik)
 DELETE FROM tables WHERE id > 15;
 
 
@@ -143,8 +153,9 @@ DELETE FROM tables WHERE id > 15;
 UPDATE setup SET is_done = TRUE WHERE id = 1;
 
 
--- Özet bilgi
+-- Özet bilgi (Status Check)
 SELECT '✅ Veritabanı başarıyla kuruldu!' AS status;
 SELECT COUNT(*) AS total_products FROM products;
 SELECT COUNT(*) AS total_tables FROM tables WHERE is_deleted = FALSE;
 SELECT COUNT(*) AS total_users FROM users;
+SELECT COUNT(*) AS total_customers FROM customers;
