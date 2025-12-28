@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.baharkiraathanesi.kiraathane.VeresiyeController">
+    <top>
+        <HBox spacing="20" style="-fx-background-color: #333; -fx-padding: 15;" alignment="CENTER_LEFT">
+            <Button text="← Ana Menü" onAction="#goBack" style="-fx-background-color: #555; -fx-text-fill: white; -fx-cursor: hand;"/>
+            <Label text="Veresiye Defteri" textFill="WHITE"><font><Font name="System Bold" size="20"/></font></Label>
+        </HBox>
+    </top>
+    <center>
+        <TableView fx:id="customerTable">
+            <columns>
+                <TableColumn fx:id="nameColumn" text="Ad Soyad" prefWidth="250"/>
+                <TableColumn fx:id="phoneColumn" text="Telefon" prefWidth="150"/>
+                <TableColumn fx:id="balanceColumn" text="Bakiye (Borç)" prefWidth="150"/>
+            </columns>
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+            </columnResizePolicy>
+        </TableView>
+    </center>
+    <right>
+        <VBox spacing="10" style="-fx-padding: 15; -fx-background-color: #f4f4f4; -fx-border-color: #ddd; -fx-border-width: 0 0 0 1;">
+            <Label text="İşlemler" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+            <Separator/>
+
+            <Button text="Yeni Müşteri Ekle" onAction="#addCustomer" maxWidth="Infinity" prefHeight="40"/>
+
+            <Button text="Bilgileri Düzenle" onAction="#editCustomer" maxWidth="Infinity" prefHeight="40" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-cursor: hand;"/>
+
+            <Separator/>
+
+            <Button text="Ödeme Al (Tahsilat)" onAction="#receivePayment" maxWidth="Infinity" prefHeight="50" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand;"/>
+
+            <Separator/>
+
+            <Region VBox.vgrow="ALWAYS" /> <Button text="Müşteriyi Sil" onAction="#deleteCustomer" maxWidth="Infinity" prefHeight="30" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;"/>
+        </VBox>
+    </right>
+</BorderPane>
