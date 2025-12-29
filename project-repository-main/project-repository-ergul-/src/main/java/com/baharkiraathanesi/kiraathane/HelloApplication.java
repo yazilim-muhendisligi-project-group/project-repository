@@ -3,6 +3,7 @@ package com.baharkiraathanesi.kiraathane;
 import com.baharkiraathanesi.kiraathane.database.DatabaseConnection;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
@@ -21,8 +22,14 @@ public class HelloApplication extends Application {
     public void start(Stage stage) throws IOException {
         DatabaseConnection.setupDatabase();
         primaryStage = stage;
+
         changeScene("login-view.fxml");
-        stage.setTitle("Kiraathane Otomasyonu");
+        stage.setTitle("DİJİTAL ÇIRAK");
+
+        if (!stage.isMaximized()) {
+            stage.setWidth(814);
+            stage.setHeight(768);
+        }
 
         try (InputStream iconStream = getClass().getResourceAsStream("/images/cay_icon.png")) {
             if (iconStream != null) {
@@ -39,9 +46,21 @@ public class HelloApplication extends Application {
     public static void changeScene(String fxml) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource(fxml));
-            Scene scene = new Scene(fxmlLoader.load(), 800, 600);
+            Parent root = fxmlLoader.load();
+
+            boolean isMaximized = (primaryStage.getScene() != null) && primaryStage.isMaximized();
+            double width = (primaryStage.getScene() != null) ? primaryStage.getWidth() : 814;
+            double height = (primaryStage.getScene() != null) ? primaryStage.getHeight() : 768;
+
+            Scene scene = new Scene(root);
             primaryStage.setScene(scene);
-            primaryStage.centerOnScreen();
+
+            if (isMaximized) {
+                primaryStage.setMaximized(true);
+            } else {
+                primaryStage.setWidth(width);
+                primaryStage.setHeight(height);
+            }
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Sahne degistirilemedi: " + fxml, e);
         }
@@ -51,4 +70,3 @@ public class HelloApplication extends Application {
         launch();
     }
 }
-

@@ -27,6 +27,11 @@ public class TablesController {
     @FXML
     public void initialize() {
         refreshTables();
+        javafx.animation.Timeline timeline = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.seconds(60), e -> refreshTables())
+        );
+        timeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        timeline.play();
     }
 
     @FXML
@@ -76,41 +81,76 @@ public class TablesController {
         TableDAO tableDAO = new TableDAO();
         List<Table> tables = tableDAO.getAllTables();
 
+        long currentTime = System.currentTimeMillis();
+
         for (Table t : tables) {
-            String color = t.isOccupied() ? "#D32F2F" : "#2196F3"; // Kırmızı : Mavi
-            String statusText = t.isOccupied() ? "\n(DOLU)" : "\n(BOŞ)";
+            // Varsayılan Stil (Mavi veya Kırmızı)
+            String baseColor = t.isOccupied() ? "#D32F2F" : "#2196F3";
+            StringBuilder btnText = new StringBuilder(t.getName());
 
-            Button btn = new Button(t.getName() + statusText);
-            btn.setPrefSize(120, 80);
+            // Eğer masa DOLU ise süre hesaplamaları yap
+            boolean isWarning = false;
+
+            if (t.isOccupied() && t.getOpenTime() != null) {
+                // 1. Masa Ne Kadar Süredir Açık?
+                long openDiff = currentTime - t.getOpenTime().getTime();
+                long openMinutes = openDiff / (60 * 1000);
+                long openHours = openMinutes / 60;
+                openMinutes = openMinutes % 60;
+
+                btnText.append(String.format("\n⏱ %02d:%02d", openHours, openMinutes));
+
+                // 2. Son Siparişten Beri Ne Kadar Geçti?
+                if (t.getLastActionTime() != null) {
+                    long idleDiff = currentTime - t.getLastActionTime().getTime();
+                    long idleMinutes = idleDiff / (60 * 1000);
+
+                    // --- UYARI AYARI BURADA (30 Dakika) ---
+                    if (idleMinutes >= 30) {
+                        isWarning = true;
+                        btnText.append("\n⚠️").append(idleMinutes).append(" dk'dır sessiz!");
+                    }
+                }
+            } else {
+                btnText.append("\n(BOŞ)");
+            }
+
+            Button btn = new Button(btnText.toString());
+            btn.setPrefSize(130, 100);
             btn.setTextAlignment(TextAlignment.CENTER);
-            btn.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: " + color + "; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand;");
 
-            // Tıklama Olayı (Sol tık sipariş açar)
+            // Renk Ayarı: Eğer uyarı varsa TURUNCU yap, yoksa normal renginde kalsın
+            String finalColor = isWarning ? "#FF9800" : baseColor;
+
+            // Eğer uyarı varsa yazı rengi siyah olsun (okunabilirlik için), yoksa beyaz
+            String textColor = isWarning ? "black" : "white";
+
+            btn.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; " +
+                    "-fx-background-color: " + finalColor + "; " +
+                    "-fx-text-fill: " + textColor + "; " +
+                    "-fx-background-radius: 10; " +
+                    "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2); " +
+                    "-fx-cursor: hand;");
+
+            // Tıklama Olayları (Eskisi gibi)
             btn.setOnMouseClicked(e -> {
                 if (e.getButton() == MouseButton.PRIMARY) {
                     openOrderScreen(t.getId(), t.getName());
                 }
             });
 
-            // Sağ Tık Menüsü Oluştur
+            // Sağ Tık Menüsü (Eskisi gibi)
             ContextMenu contextMenu = new ContextMenu();
-
-            // SADECE DOLU MASALAR TAŞINABİLİR
             if (t.isOccupied()) {
                 MenuItem moveItem = new MenuItem("Masayı Taşı / Birleştir");
                 moveItem.setOnAction(e -> showMoveTableDialog(t));
                 contextMenu.getItems().add(moveItem);
-
                 contextMenu.getItems().add(new SeparatorMenuItem());
             }
-
-            // SADECE BOŞ MASALAR SİLİNEBİLİR (Veya yönetici ise hepsi)
             MenuItem deleteItem = new MenuItem("Masayı Sil");
             deleteItem.setOnAction(e -> deleteTable(t.getId(), t.getName(), t.isOccupied()));
-
             contextMenu.getItems().add(deleteItem);
 
-            // Menüyü butona bağla
             btn.setContextMenu(contextMenu);
 
             tablesContainer.getChildren().add(btn);

@@ -14,32 +14,52 @@ public class TableDAO {
     private static final Logger LOGGER = Logger.getLogger(TableDAO.class.getName());
 
     public List<Table> getAllTables() {
-        List<Table> tableList = new ArrayList<>();
-        final String SQL = "SELECT * FROM tables WHERE is_deleted = FALSE ORDER BY id";
+        List<Table> tables = new ArrayList<>();
+
+        // Bu SQL sorgusu şunları yapar:
+        // 1. Masaları getir.
+        // 2. Eğer masa doluysa (orders tablosunda ödenmemiş kaydı varsa) o siparişin açılış saatini al.
+        // 3. O siparişe ait en son eklenen ürünün saatini (MAX) al.
+        String sql = "SELECT t.id, t.name, t.is_occupied, " +
+                "o.created_at as open_time, " +
+                "MAX(oi.created_at) as last_item_time " +
+                "FROM tables t " +
+                "LEFT JOIN orders o ON t.id = o.table_id AND o.is_paid = FALSE " +
+                "LEFT JOIN order_items oi ON o.id = oi.order_id " +
+                "WHERE t.is_deleted = FALSE " +
+                "GROUP BY t.id, t.name, t.is_occupied, o.created_at " +
+                "ORDER BY t.id";
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(SQL)) {
-
-            if (conn == null) {
-                LOGGER.warning("Veritabani baglantisi kurulamadi");
-                return tableList;
-            }
+             ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                Table table = new Table(
+                Table t = new Table(
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getBoolean("is_occupied")
                 );
-                tableList.add(table);
+
+                // Zaman bilgilerini set et
+                if (t.isOccupied()) {
+                    t.setOpenTime(rs.getTimestamp("open_time"));
+
+                    // Eğer hiç ürün eklenmemişse son işlem zamanı açılış zamanıdır
+                    Timestamp lastItem = rs.getTimestamp("last_item_time");
+                    if (lastItem != null) {
+                        t.setLastActionTime(lastItem);
+                    } else {
+                        t.setLastActionTime(t.getOpenTime());
+                    }
+                }
+
+                tables.add(t);
             }
-
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Masalar getirilirken hata olustu", e);
+            e.printStackTrace();
         }
-
-        return tableList;
+        return tables;
     }
 
     public boolean updateTableStatus(int tableId, boolean isOccupied) {

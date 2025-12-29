@@ -17,9 +17,8 @@
     </top>
 
     <center>
-        <ScrollPane fitToWidth="true">
-            <FlowPane fx:id="productsContainer" hgap="15" vgap="15" style="-fx-padding: 20;"/>
-        </ScrollPane>
+        <TabPane fx:id="categoryTabPane" tabClosingPolicy="UNAVAILABLE" style="-fx-background-color: #f4f4f4;">
+        </TabPane>
     </center>
 
     <right>
