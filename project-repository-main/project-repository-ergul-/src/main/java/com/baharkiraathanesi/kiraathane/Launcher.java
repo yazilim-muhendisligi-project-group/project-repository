@@ -1,6 +1,5 @@
 package com.baharkiraathanesi.kiraathane;
 
-import javafx.application.Application;
 import java.io.InputStream;
 import java.util.logging.LogManager;
 
@@ -8,15 +7,15 @@ public class Launcher {
     public static void main(String[] args) {
         try {
             InputStream configFile = Launcher.class.getClassLoader()
-                .getResourceAsStream("logging.properties");
+                    .getResourceAsStream("logging.properties");
             if (configFile != null) {
                 LogManager.getLogManager().readConfiguration(configFile);
-                System.out.println("Logging yapılandırması yüklendi - PDFBox uyarıları gizlendi");
+                System.out.println("Logging yapılandırması yüklendi");
             }
         } catch (Exception e) {
             System.out.println("Logging yapılandırması yüklenemedi: " + e.getMessage());
         }
 
-        Application.launch(HelloApplication.class, args);
+        HelloApplication.main(args);
     }
 }
